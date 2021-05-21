@@ -1,2 +1,8 @@
 /.idea/
 /.gradle/
+/bots/
+/build/
+/config/
+/data/
+/plugins/
+local.properties

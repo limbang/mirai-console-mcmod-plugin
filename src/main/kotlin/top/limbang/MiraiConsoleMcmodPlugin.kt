@@ -2,7 +2,9 @@ package top.limbang
 
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.utils.info
+import net.mamoe.mirai.event.globalEventChannel
+import net.mamoe.mirai.event.subscribeGroupMessages
+import top.limbang.mcmod.Mcmod
 
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
@@ -14,6 +16,11 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     }
 ) {
     override fun onEnable() {
-        logger.info { "Plugin loaded" }
+        globalEventChannel().subscribeGroupMessages {
+            startsWith("查询") {
+               val menuSelect =  Mcmod.search("植物魔法", Filter.ALL)
+                group.sendMessage(menuSelect)
+            }
+        }
     }
 }
