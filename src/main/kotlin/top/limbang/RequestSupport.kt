@@ -1,4 +1,4 @@
-package top.limbang.mcmod
+package top.limbang
 
 import okhttp3.OkHttpClient
 import okhttp3.Request

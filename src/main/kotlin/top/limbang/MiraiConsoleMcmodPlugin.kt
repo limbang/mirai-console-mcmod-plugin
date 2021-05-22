@@ -2,9 +2,9 @@ package top.limbang
 
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
-import top.limbang.mcmod.Mcmod
 
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
@@ -17,10 +17,14 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
 ) {
     override fun onEnable() {
         globalEventChannel().subscribeGroupMessages {
-            startsWith("查询") {
-               val menuSelect =  Mcmod.search("植物魔法", Filter.ALL)
-                group.sendMessage(menuSelect)
-            }
+            startsWith("百科模组") { search(it, this, Filter.MODULE) }
+            startsWith("百科资料") { search(it, this, Filter.DATA) }
+            startsWith("百科教程") { search(it, this, Filter.COURSE_OF_STUDY) }
         }
+    }
+
+    private suspend fun search(prefix: String, event: GroupMessageEvent, filter: Filter) {
+        val list = MinecraftWiki.searchList(prefix, filter)
+        //event.group.sendMessage(list)
     }
 }
