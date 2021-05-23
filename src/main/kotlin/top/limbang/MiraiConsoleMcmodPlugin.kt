@@ -62,8 +62,8 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
         val module = MinecraftWiki.parseModule(url)
 
         val moduleMessageChain = MessageChainBuilder()
-        moduleMessageChain.add(At(event.sender))
-        moduleMessageChain.add(readImage(module.iconUrl,event))
+        moduleMessageChain.add(At(event.sender) + "\n")
+        moduleMessageChain.add(readImage(module.iconUrl, event) + "\n")
 
         var name = ""
         if (module.shortName.isNotEmpty()) name += "缩写:${module.shortName}\n"
@@ -77,28 +77,27 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     }
 
     private suspend fun dataHandle(url: String, event: GroupMessageEvent) {
-
         val item = MinecraftWiki.parseItem(url)
 
-        val moduleMessageChain = MessageChainBuilder()
-        moduleMessageChain.add(At(event.sender))
-        moduleMessageChain.add(readImage(item.iconUrl,event))
-        moduleMessageChain.add("${item.name}\n")
-        introductionMessage(moduleMessageChain, item.introduction, event)
-        moduleMessageChain.add("合成表:${item.tabUrl}")
+        val dataMessageChain = MessageChainBuilder()
+        dataMessageChain.add(At(event.sender) + "\n")
+        dataMessageChain.add(readImage(item.iconUrl, event) + "\n")
+        dataMessageChain.add(item.name + "\n")
+        introductionMessage(dataMessageChain, item.introduction, event)
+        dataMessageChain.add("\n合成表:${item.tabUrl}\n")
 
-        event.group.sendMessage(moduleMessageChain.build())
+        event.group.sendMessage(dataMessageChain.build())
     }
 
     private suspend fun courseOfStudyHandle(url: String, event: GroupMessageEvent) {
         val courseOfStudy = MinecraftWiki.parseCourseOfStudy(url)
 
-        val moduleMessageChain = MessageChainBuilder()
-        moduleMessageChain.add(At(event.sender))
-        moduleMessageChain.add("${courseOfStudy.name}\n")
-        introductionMessage(moduleMessageChain, courseOfStudy.introduction, event)
+        val courseOfStudyMessageChain = MessageChainBuilder()
+        courseOfStudyMessageChain.add(At(event.sender) + "\n")
+        courseOfStudyMessageChain.add("${courseOfStudy.name}\n")
+        introductionMessage(courseOfStudyMessageChain, courseOfStudy.introduction, event)
 
-        event.group.sendMessage(moduleMessageChain.build())
+        event.group.sendMessage(courseOfStudyMessageChain.build())
     }
 
     private fun message(searchResultsList: List<SearchResults>): String {
@@ -114,18 +113,18 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
      */
     private suspend fun introductionMessage(
         messageChain: MessageChainBuilder,
-        introduction: String,
+        introductionHtml: String,
         event: GroupMessageEvent
     ) {
-        var introduction = introduction
+        var introduction = introductionHtml
         val strList: MutableList<String> = ArrayList()
         val imgList: MutableList<Image> = ArrayList()
         var start: Int
         while (introduction.indexOf("<img data-src=").also { start = it } != -1) {
             strList.add(introduction.substring(0, start))
             introduction = introduction.substring(start)
-            val imgUrl = introduction.substringBefore("<img data-src=\"", "\">")
-            imgList.add(readImage(imgUrl,event))
+            val imgUrl = introduction.substringBetween("<img data-src=\"", "\">")
+            imgList.add(readImage(imgUrl, event))
             introduction = introduction.substring(imgUrl.length + 17)
         }
         strList.add(introduction)
@@ -142,8 +141,8 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     private suspend fun readImage(url: String, event: GroupMessageEvent): Image {
         val imgFileName = url.substringAfterLast("/")
         val file = File("data/top.limbang.mirai-console-mcmod-plugin/img/$imgFileName")
-        val imageExternalResource  = if (file.exists()) {
-             file.readBytes().toExternalResource()
+        val imageExternalResource = if (file.exists()) {
+            file.readBytes().toExternalResource()
         } else {
             RequestSupport.downloadImage(url, file).toExternalResource()
         }
