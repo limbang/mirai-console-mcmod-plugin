@@ -1,4 +1,4 @@
-package top.limbang
+package top.limbang.mirai.mcmod
 
 import okhttp3.OkHttpClient
 import okhttp3.Request

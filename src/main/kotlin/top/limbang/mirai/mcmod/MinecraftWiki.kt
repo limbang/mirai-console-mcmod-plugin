@@ -1,10 +1,10 @@
-package top.limbang
+package top.limbang.mirai.mcmod
 
 import kotlinx.serialization.Serializable
 import org.jsoup.Jsoup
 import org.jsoup.safety.Whitelist
 import org.jsoup.select.Elements
-import top.limbang.Filter.*
+import top.limbang.mirai.mcmod.Filter.*
 
 /**
  * ### 搜索过滤分类

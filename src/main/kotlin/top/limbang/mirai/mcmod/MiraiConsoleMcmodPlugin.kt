@@ -1,4 +1,4 @@
-package top.limbang
+package top.limbang.mirai.mcmod
 
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
@@ -24,18 +24,19 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     }
 ) {
     override fun onEnable() {
-        PluginData.reload()
+        McmodPluginDatMca.reload()
         globalEventChannel().subscribeGroupMessages {
             startsWith("百科模组") { handle(it, this, Filter.MODULE) }
             startsWith("百科资料") { handle(it, this, Filter.DATA) }
             startsWith("百科教程") { handle(it, this, Filter.COURSE_OF_STUDY) }
-            startsWith("#") { select(it, this) }
+            startsWith("查看") { select(it, this) }
         }
     }
 
     private suspend fun handle(prefix: String, event: GroupMessageEvent, filter: Filter) {
+        if(prefix.isEmpty()) return
         val list = MinecraftWiki.searchList(prefix, filter)
-        PluginData.searchMap[event.group.id] = list
+        McmodPluginDatMca.searchMap[event.group.id] = list
         event.group.sendMessage(message(list))
     }
 
@@ -43,14 +44,18 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
      * ### 选择选项
      */
     private suspend fun select(prefix: String, event: GroupMessageEvent) {
+        logger.debug(prefix)
         val serialNumber: Int
         try {
             serialNumber = prefix.toInt()
         } catch (e: NumberFormatException) {
             return
         }
-        val searchResults = PluginData.searchMap[event.group.id]?.get(serialNumber)
-        when (searchResults?.filter) {
+        val list = McmodPluginDatMca.searchMap[event.group.id] ?: return
+        if(serialNumber >= list.size) return
+
+        val searchResults = list[serialNumber]
+        when (searchResults.filter) {
             Filter.MODULE -> moduleHandle(searchResults.url, event)
             Filter.DATA -> dataHandle(searchResults.url, event)
             Filter.COURSE_OF_STUDY -> courseOfStudyHandle(searchResults.url, event)
@@ -79,6 +84,8 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     private suspend fun dataHandle(url: String, event: GroupMessageEvent) {
         val item = MinecraftWiki.parseItem(url)
 
+        logger.debug(item.toString())
+
         val dataMessageChain = MessageChainBuilder()
         dataMessageChain.add(At(event.sender) + "\n")
         dataMessageChain.add(readImage(item.iconUrl, event) + "\n")
@@ -103,7 +110,7 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     private fun message(searchResultsList: List<SearchResults>): String {
         var message = "请回复[]的内容来选择:\n"
         for (i in searchResultsList.indices) {
-            message += "[#$i]:${searchResultsList[i].title}\n"
+            message += "[查看$i]:${searchResultsList[i].title}\n"
         }
         return message
     }
@@ -139,7 +146,7 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     }
 
     private suspend fun readImage(url: String, event: GroupMessageEvent): Image {
-        val imgFileName = url.substringAfterLast("/")
+        val imgFileName = url.substringAfterLast("/").substringBefore("?")
         val file = File("data/top.limbang.mirai-console-mcmod-plugin/img/$imgFileName")
         val imageExternalResource = if (file.exists()) {
             file.readBytes().toExternalResource()
@@ -150,11 +157,12 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
         imageExternalResource.close()
         return uploadImage
     }
+
 }
 
 /**
  * ### 插件数据
  */
-object PluginData : AutoSavePluginData("mcmod") {
+object McmodPluginDatMca : AutoSavePluginData("mcmod") {
     var searchMap: MutableMap<Long, List<SearchResults>> by value()
 }

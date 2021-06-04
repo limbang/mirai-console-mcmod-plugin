@@ -1,4 +1,4 @@
-package top.limbang
+package top.limbang.mirai.mcmod
 
 fun main() {
 //    RequestSupport.downloadImage(
