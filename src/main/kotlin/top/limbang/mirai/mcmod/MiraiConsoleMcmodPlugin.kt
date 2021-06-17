@@ -5,6 +5,7 @@ import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.At
@@ -17,7 +18,7 @@ import java.io.File
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "1.0-SNAPSHOT",
+        version = "1.0.1",
     ) {
         author("limbang")
         info("""mc百科查询""")
@@ -30,6 +31,17 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
             startsWith("百科资料") { handle(it, this, Filter.DATA) }
             startsWith("百科教程") { handle(it, this, Filter.COURSE_OF_STUDY) }
             startsWith("查看") { select(it, this) }
+        }
+        globalEventChannel().subscribeAlways<NudgeEvent> {
+            if (target.id == bot.id) {
+                subject.sendMessage(
+                    "Minecraft百科查询插件使用说明:\n" +
+                            "查询物品:百科资料加物品名称\n" +
+                            "查询模组:百科模组加模组名称\n" +
+                            "查询教程:百科教程加教程名称\n"+
+                            "资料均来自:mcmod.cn"
+                )
+            }
         }
     }
 
