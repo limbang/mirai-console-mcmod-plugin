@@ -18,7 +18,7 @@ import java.io.File
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "1.0.1",
+        version = "1.0.2",
     ) {
         author("limbang")
         info("""mc百科查询""")
@@ -120,7 +120,11 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     }
 
     private fun message(searchResultsList: List<SearchResults>): String {
-        var message = "请回复[]的内容来选择:\n"
+        var message = if(searchResultsList.isEmpty())
+            "未查询到此内容...\n"
+        else
+            "请回复[]的内容来选择:\n"
+
         for (i in searchResultsList.indices) {
             message += "[查看$i]:${searchResultsList[i].title}\n"
         }
