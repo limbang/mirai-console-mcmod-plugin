@@ -16,7 +16,7 @@ import net.mamoe.mirai.event.subscribeGroupMessages
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "1.0.2",
+        version = "1.0.3",
     ) {
         author("limbang")
         info("""mc百科查询""")
