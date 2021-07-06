@@ -1,5 +1,8 @@
 package top.limbang.mirai.mcmod
 
+import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
+import net.mamoe.mirai.console.command.CommandSender
+import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
@@ -8,9 +11,9 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
-import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Image
-import net.mamoe.mirai.message.data.MessageChainBuilder
+import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import java.io.File
 
@@ -25,30 +28,42 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     }
 ) {
     override fun onEnable() {
-        McmodPluginDatMca.reload()
+        McmodPluginData.reload()
+        McmodPluginCompositeCommand.register()
+        // 读取查询自定义命令
+        val module = McmodPluginData.queryCommand[Filter.MODULE] ?: "百科模组"
+        val data = McmodPluginData.queryCommand[Filter.DATA] ?: "百科资料"
+        val courseOfStudy = McmodPluginData.queryCommand[Filter.COURSE_OF_STUDY] ?: "百科教程"
+        val detail = McmodPluginData.detail
+
+        println(detail)
+
         globalEventChannel().subscribeGroupMessages {
-            startsWith("百科模组") { handle(it, this, Filter.MODULE) }
-            startsWith("百科资料") { handle(it, this, Filter.DATA) }
-            startsWith("百科教程") { handle(it, this, Filter.COURSE_OF_STUDY) }
-            startsWith("查看") { select(it, this) }
+            startsWith(module) { handle(it, this, Filter.MODULE) }
+            startsWith(data) { handle(it, this, Filter.DATA) }
+            startsWith(courseOfStudy) { handle(it, this, Filter.COURSE_OF_STUDY) }
+            startsWith(detail) { select(it, this) }
         }
+        // 监听戳一戳消息并回复帮助
         globalEventChannel().subscribeAlways<NudgeEvent> {
             if (target.id == bot.id) {
                 subject.sendMessage(
                     "Minecraft百科查询插件使用说明:\n" +
-                            "查询物品:百科资料加物品名称\n" +
-                            "查询模组:百科模组加模组名称\n" +
-                            "查询教程:百科教程加教程名称\n"+
+                            "查询物品:$data 加物品名称\n" +
+                            "查询模组:$module 加模组名称\n" +
+                            "查询教程:$courseOfStudy 加教程名称\n" +
                             "资料均来自:mcmod.cn"
                 )
             }
         }
     }
 
+
     private suspend fun handle(prefix: String, event: GroupMessageEvent, filter: Filter) {
-        if(prefix.isEmpty()) return
+        if (prefix.isEmpty()) return
         val list = MinecraftWiki.searchList(prefix, filter)
-        McmodPluginDatMca.searchMap[event.group.id] = list
+        McmodPluginData.searchMap[event.group.id] = list
+
         event.group.sendMessage(message(list))
     }
 
@@ -56,15 +71,14 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
      * ### 选择选项
      */
     private suspend fun select(prefix: String, event: GroupMessageEvent) {
-        logger.debug(prefix)
         val serialNumber: Int
         try {
             serialNumber = prefix.toInt()
         } catch (e: NumberFormatException) {
             return
         }
-        val list = McmodPluginDatMca.searchMap[event.group.id] ?: return
-        if(serialNumber >= list.size) return
+        val list = McmodPluginData.searchMap[event.group.id] ?: return
+        if (serialNumber >= list.size) return
 
         val searchResults = list[serialNumber]
         when (searchResults.filter) {
@@ -78,55 +92,50 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
     private suspend fun moduleHandle(url: String, event: GroupMessageEvent) {
         val module = MinecraftWiki.parseModule(url)
 
-        val moduleMessageChain = MessageChainBuilder()
-        moduleMessageChain.add(At(event.sender) + "\n")
-        moduleMessageChain.add(readImage(module.iconUrl, event) + "\n")
-
+        val forwardMessageBuilder = ForwardMessageBuilder(event.group)
+        forwardMessageBuilder.add(event.sender, readImage(module.iconUrl, event))
         var name = ""
         if (module.shortName.isNotEmpty()) name += "缩写:${module.shortName}\n"
         if (module.cnName.isNotEmpty()) name += "中文:${module.cnName}\n"
-        if (module.enName.isNotEmpty()) name += "英文:${module.enName}\n"
-        moduleMessageChain.add(name)
-
-        introductionMessage(moduleMessageChain, module.introduction, event)
-
-        event.group.sendMessage(moduleMessageChain.build())
+        if (module.enName.isNotEmpty()) name += "英文:${module.enName}"
+        forwardMessageBuilder.add(event.sender, PlainText(name))
+        forwardMessageBuilder.add(event.sender, PlainText(url))
+        introductionMessage(forwardMessageBuilder, module.introduction, event)
+        event.group.sendMessage(forwardMessageBuilder.build())
     }
 
     private suspend fun dataHandle(url: String, event: GroupMessageEvent) {
         val item = MinecraftWiki.parseItem(url)
 
-        logger.debug(item.toString())
+        val forwardMessageBuilder = ForwardMessageBuilder(event.group)
+        forwardMessageBuilder.add(event.sender, readImage(item.iconUrl, event))
+        forwardMessageBuilder.add(event.sender, PlainText(item.name))
+        forwardMessageBuilder.add(event.sender, PlainText(url))
+        introductionMessage(forwardMessageBuilder, item.introduction, event)
+        forwardMessageBuilder.add(event.sender, PlainText("合成表:${item.tabUrl}"))
 
-        val dataMessageChain = MessageChainBuilder()
-        dataMessageChain.add(At(event.sender) + "\n")
-        dataMessageChain.add(readImage(item.iconUrl, event) + "\n")
-        dataMessageChain.add(item.name + "\n")
-        introductionMessage(dataMessageChain, item.introduction, event)
-        dataMessageChain.add("\n合成表:${item.tabUrl}\n")
-
-        event.group.sendMessage(dataMessageChain.build())
+        event.group.sendMessage(forwardMessageBuilder.build())
     }
 
     private suspend fun courseOfStudyHandle(url: String, event: GroupMessageEvent) {
         val courseOfStudy = MinecraftWiki.parseCourseOfStudy(url)
 
-        val courseOfStudyMessageChain = MessageChainBuilder()
-        courseOfStudyMessageChain.add(At(event.sender) + "\n")
-        courseOfStudyMessageChain.add("${courseOfStudy.name}\n")
-        introductionMessage(courseOfStudyMessageChain, courseOfStudy.introduction, event)
+        val forwardMessageBuilder = ForwardMessageBuilder(event.group)
+        forwardMessageBuilder.add(event.sender, PlainText(courseOfStudy.name))
+        forwardMessageBuilder.add(event.sender, PlainText(url))
+        introductionMessage(forwardMessageBuilder, courseOfStudy.introduction, event)
 
-        event.group.sendMessage(courseOfStudyMessageChain.build())
+        event.group.sendMessage(forwardMessageBuilder.build())
     }
 
     private fun message(searchResultsList: List<SearchResults>): String {
-        var message = if(searchResultsList.isEmpty())
+        var message = if (searchResultsList.isEmpty())
             "未查询到此内容...\n"
         else
             "请回复[]的内容来选择:\n"
 
         for (i in searchResultsList.indices) {
-            message += "[查看$i]:${searchResultsList[i].title}\n"
+            message += "[${McmodPluginData.detail}$i]:${searchResultsList[i].title}\n"
         }
         return message
     }
@@ -135,7 +144,7 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
      * 处理内容里面的图片，并上传图片
      */
     private suspend fun introductionMessage(
-        messageChain: MessageChainBuilder,
+        forwardMessageBuilder: ForwardMessageBuilder,
         introductionHtml: String,
         event: GroupMessageEvent
     ) {
@@ -153,14 +162,19 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
         strList.add(introduction)
         var i = 0
         while (strList.size > i) {
-            messageChain.add(strList[i])
+            strList[i].split("\n\n").forEach {
+                forwardMessageBuilder.add(event.sender, PlainText(it))
+            }
             if (i < imgList.size) {
-                messageChain.add(imgList[i])
+                forwardMessageBuilder.add(event.sender, imgList[i])
             }
             i++
         }
     }
 
+    /**
+     * 读取图片
+     */
     private suspend fun readImage(url: String, event: GroupMessageEvent): Image {
         val imgFileName = url.substringAfterLast("/").substringBefore("?")
         val file = File("data/top.limbang.mirai-console-mcmod-plugin/img/$imgFileName")
@@ -179,6 +193,28 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
 /**
  * ### 插件数据
  */
-object McmodPluginDatMca : AutoSavePluginData("mcmod") {
-    var searchMap: MutableMap<Long, List<SearchResults>> by value()
+object McmodPluginData : AutoSavePluginData("mcmod") {
+    val searchMap: MutableMap<Long, List<SearchResults>> by value()
+    val queryCommand: MutableMap<Filter, String> by value()
+    var detail by value("查看")
+}
+
+
+/**
+ * ### 插件指令
+ */
+object McmodPluginCompositeCommand : CompositeCommand(
+    MiraiConsoleMcmodPlugin, "mcmod"
+) {
+    @SubCommand("queryCommand", "查询命令")
+    suspend fun CommandSender.queryCommand(type: Filter, command: String) {
+        sendMessage("原查询$type 命令<${McmodPluginData.queryCommand[type]}>更改为<$command>,重启后生效")
+        McmodPluginData.queryCommand[type] = command
+    }
+
+    @SubCommand("detailCommand", "详情命令")
+    suspend fun CommandSender.detailCommand(command: String) {
+        sendMessage("原详情命令<${McmodPluginData.detail}>更改为<$command>,重启后生效")
+        McmodPluginData.detail = command
+    }
 }
