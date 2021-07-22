@@ -5,12 +5,8 @@
 ## 指令
 
 ```shell
-# 修改查询详情的命令 
-/mcmod detailCommand <command> 
-/mcmod 详情命令 <command>
-
 # 修改搜索标签的命令
-/mcmod queryCommand <type> <command>
+/mcmod setQueryCommand <type> <command>
 /mcmod 查询命令 <type> <command> 
 ```
 

@@ -1,5 +1,7 @@
 package top.limbang.mirai.mcmod
 
+import top.limbang.mirai.mcmod.extension.substringBetween
+
 fun main() {
 //    RequestSupport.downloadImage(
 //        "https://i.mcmod.cn/editor/upload/20180421/1524303371_7926_D5Bw.png",

@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod
+package top.limbang.mirai.mcmod.service
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -8,7 +8,7 @@ import org.jsoup.select.Elements
 import java.io.File
 
 
-object RequestSupport {
+object HttpUtil {
 
     /**
      * ### 下载图片
@@ -26,7 +26,7 @@ object RequestSupport {
     /**
      * ### 发送GET请求
      */
-    fun sendGetRequest(url: String): String {
+    fun get(url: String): String {
         val okHttpClient = OkHttpClient()
         val request = Request.Builder().url(url).build()
         return okHttpClient.newCall(request).execute().body!!.string()
@@ -35,15 +35,15 @@ object RequestSupport {
     /**
      * ### 解析网页响应
      */
-    fun parseResponseBody(responseBody: String): Document {
+    fun parseBody(responseBody: String): Document {
         return Jsoup.parse(responseBody)
     }
 
     /**
      * ### 发送GET请求并解析
      */
-    fun sendGetRequestToParse(url: String): Document {
-        return parseResponseBody(sendGetRequest(url))
+    fun getDocument(url: String): Document {
+        return parseBody(get(url))
     }
 
     /**
@@ -52,5 +52,4 @@ object RequestSupport {
     fun documentSelect(document: Document, cssQuery: String): Elements {
         return document.select(cssQuery)
     }
-
 }

@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod
+package top.limbang.mirai.mcmod.extension
 
 fun String.substringBetween(open: String, close: String): String {
     val start = this.indexOf(open)

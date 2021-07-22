@@ -1,10 +1,11 @@
-package top.limbang.mirai.mcmod
+package top.limbang.mirai.mcmod.service
 
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import top.limbang.mirai.mcmod.extension.substringBetween
 import java.io.File
 
 object MessageHandle {
@@ -12,7 +13,7 @@ object MessageHandle {
      * 模组消息处理
      */
     suspend fun moduleHandle(url: String, event: GroupMessageEvent) {
-        val module = MinecraftWiki.parseModule(url)
+        val module = MinecraftMod.parseModule(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
         forwardMessageBuilder.add(event.sender, readImage(module.iconUrl, event))
@@ -30,7 +31,7 @@ object MessageHandle {
      * 资料消息处理
      */
     suspend fun dataHandle(url: String, event: GroupMessageEvent) {
-        val item = MinecraftWiki.parseItem(url)
+        val item = MinecraftMod.parseItem(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
         forwardMessageBuilder.add(event.sender, readImage(item.iconUrl, event))
@@ -46,7 +47,7 @@ object MessageHandle {
      * 教程消息处理
      */
     suspend fun courseOfStudyHandle(url: String, event: GroupMessageEvent) {
-        val courseOfStudy = MinecraftWiki.parseCourseOfStudy(url)
+        val courseOfStudy = MinecraftMod.parseCourseOfStudy(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
         forwardMessageBuilder.add(event.sender, PlainText(courseOfStudy.name))
@@ -99,7 +100,7 @@ object MessageHandle {
         val imageExternalResource = if (file.exists()) {
             file.readBytes().toExternalResource()
         } else {
-            RequestSupport.downloadImage(url, file).toExternalResource()
+            HttpUtil.downloadImage(url, file).toExternalResource()
         }
         val uploadImage = event.group.uploadImage(imageExternalResource)
         imageExternalResource.close()

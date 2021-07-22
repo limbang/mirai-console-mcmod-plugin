@@ -10,18 +10,26 @@ import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
+import net.mamoe.mirai.event.nextEventOrNull
 import net.mamoe.mirai.event.subscribeGroupMessages
+import net.mamoe.mirai.message.data.content
+import top.limbang.mirai.mcmod.service.Filter
+import top.limbang.mirai.mcmod.service.MessageHandle
+import top.limbang.mirai.mcmod.service.MinecraftModService
+import top.limbang.mirai.mcmod.service.SearchResult
 
 
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "1.0.3",
+        version = "1.1.0",
     ) {
         author("limbang")
         info("""mc百科查询""")
     }
 ) {
+    private val service = MinecraftModService()
+
     override fun onEnable() {
         McmodPluginData.reload()
         McmodPluginCompositeCommand.register()
@@ -31,10 +39,36 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
         val courseOfStudy = McmodPluginData.queryCommand[Filter.COURSE_OF_STUDY] ?: "百科教程"
 
         globalEventChannel().subscribeGroupMessages {
-            startsWith(module) { search(it, this, Filter.MODULE) }
-            startsWith(data) { search(it, this, Filter.DATA) }
-            startsWith(courseOfStudy) { search(it, this, Filter.COURSE_OF_STUDY) }
-            startsWith(McmodPluginData.detail) { select(it, this) }
+            (startsWith(module) or startsWith(data) or startsWith(courseOfStudy)) reply {
+                val msg = it.trim()
+                val searchMessage = when {
+                    msg.startsWith(module) -> SearchMessage(Filter.MODULE, msg.substringAfter(module))
+                    msg.startsWith(data) -> SearchMessage(Filter.DATA, msg.substringAfter(data))
+                    msg.startsWith(courseOfStudy) -> SearchMessage(Filter.COURSE_OF_STUDY,
+                        msg.substringAfter(courseOfStudy))
+                    else -> return@reply "未知错误!!!"
+                }
+                if (searchMessage.key.isEmpty()) return@reply "查询内容不能为空!!!"
+
+                service.clear()
+                var nextEvent: GroupMessageEvent
+                var list: List<SearchResult>
+                do {
+                    list = service.getSearchList(searchMessage.key, searchMessage.filter, 7)
+                    if(list.size == 1) return@reply getSearchResults(0,list,this)
+                    group.sendMessage(service.searchListToString(list, group, sender))
+                    // 获取下一条消息事件
+                    nextEvent = nextEventOrNull(30000) { next -> next.sender == sender } ?: return@reply "等待回复超时,请重新查询。"
+                    if(!service.getNextPage() && service.getSearchResultsListSize() <= 0) break
+                } while (nextEvent.message.content == "P")
+
+                try {
+                    return@reply getSearchResults(nextEvent.message.content.toInt(),list,this)
+                } catch (e: NumberFormatException) {
+                    return@reply "请正确回复序号,此次查询已取消,请重新查询。"
+                }
+            }
+
         }
         // 监听戳一戳消息并回复帮助
         globalEventChannel().subscribeAlways<NudgeEvent> {
@@ -49,61 +83,28 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
             }
         }
     }
+}
 
-    /**
-     * 搜索内容
-     */
-    private suspend fun search(prefix: String, event: GroupMessageEvent, filter: Filter) {
-        if (prefix.isEmpty()) return
-        val list = MinecraftWiki.searchList(prefix, filter)
-        McmodPluginData.searchMap[event.group.id] = list
-        event.group.sendMessage(message(list))
-    }
+suspend fun getSearchResults(serialNumber: Int, list: List<SearchResult>, event: GroupMessageEvent): Any{
+    if (serialNumber >= list.size) return "输入序号大于可查询数据,此次查询已取消,请重新查询。"
 
-    /**
-     * ### 选择选项
-     */
-    private suspend fun select(prefix: String, event: GroupMessageEvent) {
-        val serialNumber: Int
-        try {
-            serialNumber = prefix.toInt()
-        } catch (e: NumberFormatException) {
-            return
-        }
-        val list = McmodPluginData.searchMap[event.group.id] ?: return
-        if (serialNumber >= list.size) return
-
-        val searchResults = list[serialNumber]
-        when (searchResults.filter) {
-            Filter.MODULE -> MessageHandle.moduleHandle(searchResults.url, event)
-            Filter.DATA -> MessageHandle.dataHandle(searchResults.url, event)
-            Filter.COURSE_OF_STUDY -> MessageHandle.courseOfStudyHandle(searchResults.url, event)
-            else -> return
-        }
-    }
-
-    private fun message(searchResultsList: List<SearchResults>): String {
-        var message = if (searchResultsList.isEmpty())
-            "未查询到此内容...\n"
-        else
-            "请回复[]的内容来选择:\n"
-
-        for (i in searchResultsList.indices) {
-            message += "[${McmodPluginData.detail}$i]:${searchResultsList[i].title}\n"
-        }
-        return message
+    val searchResults = list[serialNumber]
+    return when (searchResults.filter) {
+        Filter.MODULE -> MessageHandle.moduleHandle(searchResults.url, event)
+        Filter.DATA -> MessageHandle.dataHandle(searchResults.url, event)
+        Filter.COURSE_OF_STUDY -> MessageHandle.courseOfStudyHandle(searchResults.url, event)
+        else -> Unit
     }
 }
+
+data class SearchMessage(val filter: Filter, val key: String)
 
 /**
  * ### 插件数据
  */
 object McmodPluginData : AutoSavePluginData("mcmod") {
-    val searchMap: MutableMap<Long, List<SearchResults>> by value()
     val queryCommand: MutableMap<Filter, String> by value()
-    var detail by value("查看")
 }
-
 
 /**
  * ### 插件指令
@@ -111,15 +112,9 @@ object McmodPluginData : AutoSavePluginData("mcmod") {
 object McmodPluginCompositeCommand : CompositeCommand(
     MiraiConsoleMcmodPlugin, "mcmod"
 ) {
-    @SubCommand("queryCommand", "查询命令")
-    suspend fun CommandSender.queryCommand(type: Filter, command: String) {
+    @SubCommand("setQueryCommand", "查询命令")
+    suspend fun CommandSender.setQueryCommand(type: Filter, command: String) {
         sendMessage("原查询$type 命令<${McmodPluginData.queryCommand[type]}>更改为<$command>,重启后生效")
         McmodPluginData.queryCommand[type] = command
-    }
-
-    @SubCommand("detailCommand", "详情命令")
-    suspend fun CommandSender.detailCommand(command: String) {
-        sendMessage("原详情命令<${McmodPluginData.detail}>更改为<$command>,重启后生效")
-        McmodPluginData.detail = command
     }
 }
