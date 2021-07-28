@@ -100,7 +100,10 @@ object MessageHandle {
         val imageExternalResource = if (file.exists()) {
             file.readBytes().toExternalResource()
         } else {
-            HttpUtil.downloadImage(url, file).toExternalResource()
+            val imgSrc = if (url.startsWith('/')) {
+                url = "https://www.mcmod.cn$url"
+            } else { url }
+            HttpUtil.downloadImage(imgSrc, file).toExternalResource()
         }
         val uploadImage = event.group.uploadImage(imageExternalResource)
         imageExternalResource.close()
