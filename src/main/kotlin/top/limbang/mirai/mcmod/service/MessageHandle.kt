@@ -100,10 +100,18 @@ object MessageHandle {
         val imageExternalResource = if (file.exists()) {
             file.readBytes().toExternalResource()
         } else {
-            val imgSrc = if (url.startsWith('/')) {
-                url = "https://www.mcmod.cn$url"
-            } else { url }
-            HttpUtil.downloadImage(imgSrc, file).toExternalResource()
+            val base64Prefix = "data:image/png;base64,"
+            if (url.startsWith(base64Prefix)) { // 处理base64情况
+                val decodedBytes = Base64.getDecoder().decode(url.substring(base64Prefix.length))
+                file.writeBytes(decodedBytes)
+                decodedBytes.toExternalResource()
+            } else {
+                HttpUtil.downloadImage(when {
+                    url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
+                    url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
+                    else -> url
+                }, file).toExternalResource()
+            }
         }
         val uploadImage = event.group.uploadImage(imageExternalResource)
         imageExternalResource.close()
