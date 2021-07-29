@@ -95,12 +95,21 @@ object MessageHandle {
      * 读取图片
      */
     private suspend fun readImage(url: String, event: GroupMessageEvent): Image {
-        val imgFileName = url.substringAfterLast("/").substringBefore("?")
-        val file = File("data/top.limbang.mirai-console-mcmod-plugin/img/$imgFileName")
-        val imageExternalResource = if (file.exists()) {
-            file.readBytes().toExternalResource()
+        val base64Prefix = "data:image/png;base64,"
+        val imageExternalResource = if (url.startsWith(base64Prefix)) { // 处理base64情况
+            Base64.getDecoder().decode(url.substring(base64Prefix.length)).toExternalResource()
         } else {
-            HttpUtil.downloadImage(url, file).toExternalResource()
+            val imgFileName = url.substringAfterLast("/").substringBefore("?")
+            val file = File("data/top.limbang.mirai-console-mcmod-plugin/img/$imgFileName")
+            if (file.exists()) {
+                file.readBytes().toExternalResource()
+            } else {
+                HttpUtil.downloadImage(when {
+                    url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
+                    url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
+                    else -> url
+                }, file).toExternalResource()
+            }
         }
         val uploadImage = event.group.uploadImage(imageExternalResource)
         imageExternalResource.close()
