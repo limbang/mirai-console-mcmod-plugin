@@ -17,13 +17,13 @@ object MessageHandle {
         val module = MinecraftMod.parseModule(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
-        forwardMessageBuilder.add(event.sender, readImage(module.iconUrl, event))
+        forwardMessageBuilder.add(event.bot, readImage(module.iconUrl, event))
         var name = ""
         if (module.shortName.isNotEmpty()) name += "缩写:${module.shortName}\n"
         if (module.cnName.isNotEmpty()) name += "中文:${module.cnName}\n"
         if (module.enName.isNotEmpty()) name += "英文:${module.enName}"
-        forwardMessageBuilder.add(event.sender, PlainText(name))
-        forwardMessageBuilder.add(event.sender, PlainText(url))
+        forwardMessageBuilder.add(event.bot, PlainText(name))
+        forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, module.introduction, event)
         event.group.sendMessage(forwardMessageBuilder.build())
     }
@@ -35,11 +35,11 @@ object MessageHandle {
         val item = MinecraftMod.parseItem(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
-        forwardMessageBuilder.add(event.sender, readImage(item.iconUrl, event))
-        forwardMessageBuilder.add(event.sender, PlainText(item.name))
-        forwardMessageBuilder.add(event.sender, PlainText(url))
+        forwardMessageBuilder.add(event.bot, readImage(item.iconUrl, event))
+        forwardMessageBuilder.add(event.bot, PlainText(item.name))
+        forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, item.introduction, event)
-        forwardMessageBuilder.add(event.sender, PlainText("合成表:${item.tabUrl}"))
+        forwardMessageBuilder.add(event.bot, PlainText("合成表:${item.tabUrl}"))
 
         event.group.sendMessage(forwardMessageBuilder.build())
     }
@@ -51,8 +51,8 @@ object MessageHandle {
         val courseOfStudy = MinecraftMod.parseCourseOfStudy(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
-        forwardMessageBuilder.add(event.sender, PlainText(courseOfStudy.name))
-        forwardMessageBuilder.add(event.sender, PlainText(url))
+        forwardMessageBuilder.add(event.bot, PlainText(courseOfStudy.name))
+        forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, courseOfStudy.introduction, event)
 
         event.group.sendMessage(forwardMessageBuilder.build())
@@ -82,10 +82,10 @@ object MessageHandle {
         var i = 0
         while (strList.size > i) {
             strList[i].split("\n\n").forEach {
-                forwardMessageBuilder.add(event.sender, PlainText(it))
+                forwardMessageBuilder.add(event.bot, PlainText(it))
             }
             if (i < imgList.size) {
-                forwardMessageBuilder.add(event.sender, imgList[i])
+                forwardMessageBuilder.add(event.bot, imgList[i])
             }
             i++
         }
