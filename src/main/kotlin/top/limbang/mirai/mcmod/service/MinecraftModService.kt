@@ -59,6 +59,10 @@ class MinecraftModService {
 
     fun getSearchResultsListSize() = searchResultsList.size
 
-    fun clear() = searchResultsList.clear()
+    fun clear() {
+        searchResultsList.clear()
+        page = 1
+        nextPage = false
+    }
 
 }
