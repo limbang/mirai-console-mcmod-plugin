@@ -22,7 +22,7 @@ import top.limbang.mirai.mcmod.service.SearchResult
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "1.1.0",
+        version = "1.1.1",
     ) {
         author("limbang")
         info("""mc百科查询""")
