@@ -83,7 +83,7 @@ object MessageHandle {
         var i = 0
         while (strList.size > i) {
             strList[i].split("\n\n").forEach {
-                val maxLength = 2000
+                val maxLength = 1500
                 val n = it.length / maxLength + if (it.length % maxLength != 0) 1 else 0
                 for (i in 0 until n)
                     forwardMessageBuilder.add(event.bot, PlainText(it.substring(i*maxLength, min((i+1)*maxLength, it.length))))
