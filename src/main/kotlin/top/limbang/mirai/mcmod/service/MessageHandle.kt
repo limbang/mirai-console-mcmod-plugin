@@ -8,6 +8,7 @@ import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import top.limbang.mirai.mcmod.extension.substringBetween
 import java.io.File
 import java.util.*
+import kotlin.math.min
 
 object MessageHandle {
     /**
@@ -82,7 +83,11 @@ object MessageHandle {
         var i = 0
         while (strList.size > i) {
             strList[i].split("\n\n").forEach {
-                forwardMessageBuilder.add(event.bot, PlainText(it))
+                val maxLength = 4500
+                val n = it.length / maxLength + if (it.length % maxLength != 0) 1 else 0
+                for (i in 0 until n)
+                    forwardMessageBuilder.add(event.bot, PlainText(it.subString(i*maxLength, min((i+1)*maxLength, it.length)))
+                // forwardMessageBuilder.add(event.bot, PlainText(it))
             }
             if (i < imgList.size) {
                 forwardMessageBuilder.add(event.bot, imgList[i])
