@@ -55,7 +55,9 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
                 var list: List<SearchResult>
                 do {
                     list = service.getSearchList(searchMessage.key, searchMessage.filter, 7)
-                    if(list.size == 1) return@reply getSearchResults(0,list,this)
+                    if (list.isEmpty()) return@reply "未搜索到结果，请更换关键字重试。"
+                    else if (list.size == 1) return@reply getSearchResults(0,list,this)
+                    
                     group.sendMessage(service.searchListToString(list, group, sender))
                     // 获取下一条消息事件
                     nextEvent = nextEventOrNull(30000) { next -> next.sender == sender } ?: return@reply "等待回复超时,请重新查询。"
