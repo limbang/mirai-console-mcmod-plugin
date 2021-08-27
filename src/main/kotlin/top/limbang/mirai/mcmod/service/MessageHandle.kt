@@ -36,7 +36,7 @@ object MessageHandle {
         val item = MinecraftMod.parseItem(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.group)
-        forwardMessageBuilder.add(event.bot, readImage(item.iconUrl, event))
+        if(item.iconUrl.isNotEmpty()) forwardMessageBuilder.add(event.bot, readImage(item.iconUrl, event))
         forwardMessageBuilder.add(event.bot, PlainText(item.name))
         forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, item.introduction, event)

@@ -1,7 +1,7 @@
 package top.limbang.mirai.mcmod.service
 
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
@@ -38,20 +38,20 @@ class MinecraftModService {
         return toList
     }
 
-    fun searchListToString(list: List<SearchResult>, group: Group, sender: Member): Message {
+    fun searchListToString(list: List<SearchResult>, group: Group, bot: Bot): Message {
         if (list.isEmpty()) return PlainText("未查询到此内容...\n")
         val builder = ForwardMessageBuilder(group)
 
-        builder.add(sender,PlainText("30秒内回复编号查看"))
+        builder.add(bot,PlainText("30秒内回复编号查看"))
 
         for (i in list.indices) {
             val title = list[i].title
                 .replace(Regex("\\([^()]*\\)"),"")
                 .replace(Regex("\\[[^\\[\\]]*\\]"),"")
                 .replace(Regex("\\s*-\\s*"),"-")
-            builder.add(sender.id,i.toString(),PlainText(title))
+            builder.add(bot.id,i.toString(),PlainText(title))
         }
-        if(searchResultsList.size > 0) builder.add(sender,PlainText("回复[P]下一页"))
+        if(searchResultsList.size > 0) builder.add(bot,PlainText("回复[P]下一页"))
         return builder.build()
     }
 
