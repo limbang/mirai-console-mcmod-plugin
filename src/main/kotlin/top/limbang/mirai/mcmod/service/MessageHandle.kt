@@ -1,6 +1,6 @@
 package top.limbang.mirai.mcmod.service
 
-import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.PlainText
@@ -14,10 +14,10 @@ object MessageHandle {
     /**
      * 模组消息处理
      */
-    suspend fun moduleHandle(url: String, event: GroupMessageEvent) {
+    suspend fun moduleHandle(url: String, event: MessageEvent) {
         val module = MinecraftMod.parseModule(url)
 
-        val forwardMessageBuilder = ForwardMessageBuilder(event.group)
+        val forwardMessageBuilder = ForwardMessageBuilder(event.subject)
         forwardMessageBuilder.add(event.bot, readImage(module.iconUrl, event))
         var name = ""
         if (module.shortName.isNotEmpty()) name += "缩写:${module.shortName}\n"
@@ -26,37 +26,37 @@ object MessageHandle {
         forwardMessageBuilder.add(event.bot, PlainText(name))
         forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, module.introduction, event)
-        event.group.sendMessage(forwardMessageBuilder.build())
+        event.subject.sendMessage(forwardMessageBuilder.build())
     }
 
     /**
      * 资料消息处理
      */
-    suspend fun dataHandle(url: String, event: GroupMessageEvent) {
+    suspend fun dataHandle(url: String, event: MessageEvent) {
         val item = MinecraftMod.parseItem(url)
 
-        val forwardMessageBuilder = ForwardMessageBuilder(event.group)
+        val forwardMessageBuilder = ForwardMessageBuilder(event.subject)
         if(item.iconUrl.isNotEmpty()) forwardMessageBuilder.add(event.bot, readImage(item.iconUrl, event))
         forwardMessageBuilder.add(event.bot, PlainText(item.name))
         forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, item.introduction, event)
         forwardMessageBuilder.add(event.bot, PlainText("合成表:${item.tabUrl}"))
 
-        event.group.sendMessage(forwardMessageBuilder.build())
+        event.subject.sendMessage(forwardMessageBuilder.build())
     }
 
     /**
      * 教程消息处理
      */
-    suspend fun courseOfStudyHandle(url: String, event: GroupMessageEvent) {
+    suspend fun courseOfStudyHandle(url: String, event: MessageEvent) {
         val courseOfStudy = MinecraftMod.parseCourseOfStudy(url)
 
-        val forwardMessageBuilder = ForwardMessageBuilder(event.group)
+        val forwardMessageBuilder = ForwardMessageBuilder(event.subject)
         forwardMessageBuilder.add(event.bot, PlainText(courseOfStudy.name))
         forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, courseOfStudy.introduction, event)
 
-        event.group.sendMessage(forwardMessageBuilder.build())
+        event.subject.sendMessage(forwardMessageBuilder.build())
     }
 
 
@@ -66,7 +66,7 @@ object MessageHandle {
     private suspend fun introductionMessage(
         forwardMessageBuilder: ForwardMessageBuilder,
         introductionHtml: String,
-        event: GroupMessageEvent
+        event: MessageEvent
     ) {
         var introduction = introductionHtml
         val strList: MutableList<String> = ArrayList()
@@ -100,7 +100,7 @@ object MessageHandle {
     /**
      * 读取图片
      */
-    private suspend fun readImage(url: String, event: GroupMessageEvent): Image {
+    private suspend fun readImage(url: String, event: MessageEvent): Image {
         val base64Prefix = "data:image/png;base64,"
         val imageExternalResource = if (url.startsWith(base64Prefix)) { // 处理base64情况
             Base64.getDecoder().decode(url.substring(base64Prefix.length)).toExternalResource()
@@ -117,7 +117,7 @@ object MessageHandle {
                 }, file).toExternalResource()
             }
         }
-        val uploadImage = event.group.uploadImage(imageExternalResource)
+        val uploadImage = event.subject.uploadImage(imageExternalResource)
         imageExternalResource.close()
         return uploadImage
     }

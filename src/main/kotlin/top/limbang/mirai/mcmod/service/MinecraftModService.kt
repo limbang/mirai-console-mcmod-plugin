@@ -1,6 +1,7 @@
 package top.limbang.mirai.mcmod.service
 
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Message
@@ -38,9 +39,9 @@ class MinecraftModService {
         return toList
     }
 
-    fun searchListToString(list: List<SearchResult>, group: Group, bot: Bot): Message {
+    fun searchListToString(list: List<SearchResult>, contact: Contact, bot: Bot): Message {
         if (list.isEmpty()) return PlainText("未查询到此内容...\n")
-        val builder = ForwardMessageBuilder(group)
+        val builder = ForwardMessageBuilder(contact)
 
         builder.add(bot,PlainText("30秒内回复编号查看"))
 
