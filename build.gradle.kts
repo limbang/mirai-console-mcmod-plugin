@@ -3,11 +3,11 @@ plugins {
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
-    id("net.mamoe.mirai-console") version "2.6.4"
+    id("net.mamoe.mirai-console") version "2.8.3"
 }
 
 group = "top.limbang"
-version = "1.1.2"
+version = "1.1.3"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
