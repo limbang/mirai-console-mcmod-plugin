@@ -4,6 +4,7 @@ import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.data.AutoSavePluginData
+import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
@@ -72,17 +73,19 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
             }
         }
 
-        // 监听戳一戳消息并回复帮助
-        globalEventChannel().subscribeAlways<NudgeEvent> {
-            if (target.id == bot.id) {
-                subject.sendMessage(
-                    "Minecraft百科查询插件使用说明:\n" +
-                            "查询物品:$data 加物品名称\n" +
-                            "查询模组:$module 加模组名称\n" +
-                            "查询教程:$courseOfStudy 加教程名称\n" +
-                            "可私聊机器人查询，避免群内刷屏 :)\n" +
-                            "资料均来自:mcmod.cn"
-                )
+        if (McmodPluginData.nudgeEnabled) {
+            // 监听戳一戳消息并回复帮助
+            globalEventChannel().subscribeAlways<NudgeEvent> {
+                if (target.id == bot.id) {
+                    subject.sendMessage(
+                        "Minecraft百科查询插件使用说明:\n" +
+                                "查询物品:$data 加物品名称\n" +
+                                "查询模组:$module 加模组名称\n" +
+                                "查询教程:$courseOfStudy 加教程名称\n" +
+                                "可私聊机器人查询，避免群内刷屏 :)\n" +
+                                "资料均来自:mcmod.cn"
+                    )
+                }
             }
         }
     }
@@ -107,6 +110,8 @@ data class SearchMessage(val filter: Filter, val key: String)
  */
 object McmodPluginData : AutoSavePluginData("mcmod") {
     val queryCommand: MutableMap<Filter, String> by value()
+    @ValueDescription("是否启用戳一戳回复功能 true:启用 false:禁用")
+    var nudgeEnabled: Boolean by value(true)
 }
 
 /**
@@ -119,5 +124,11 @@ object McmodPluginCompositeCommand : CompositeCommand(
     suspend fun CommandSender.setQueryCommand(type: Filter, command: String) {
         sendMessage("原查询$type 命令<${McmodPluginData.queryCommand[type]}>更改为<$command>,重启后生效")
         McmodPluginData.queryCommand[type] = command
+    }
+    
+    @SubCommand("setNudgeEnabled", "戳一戳启用")
+    suspend fun CommandSender.setNudgeEnabled(enabled: Boolean) {
+        McmodPluginData.nudgeEnabled = enabled
+        sendMessage("OK")
     }
 }
