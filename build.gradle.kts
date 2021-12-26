@@ -1,5 +1,5 @@
 plugins {
-    val kotlinVersion = "1.4.30"
+    val kotlinVersion = "1.5.30"
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "top.limbang"
-version = "1.1.3"
+version = "1.1.5"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -16,5 +16,8 @@ repositories {
 
 dependencies{
     implementation("org.jsoup:jsoup:1.13.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
 }
+
+
