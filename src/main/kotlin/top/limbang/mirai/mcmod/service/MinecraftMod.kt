@@ -7,7 +7,8 @@ import top.limbang.mirai.mcmod.service.Filter.*
 
 object MinecraftMod {
 
-    private const val URL = "https://search.mcmod.cn"
+    private const val URL = "https://www.mcmod.cn"
+    private const val SEARCH_URL = "https://search.mcmod.cn"
     private const val SEARCH_RESULT = ".result-item > .head > a"
     private const val INTRODUCTION_TEXT = "[class=text-area common-text font14]"
     private const val INTRODUCTION_ITEM = "[class=item-content common-text font14]"
@@ -97,7 +98,7 @@ object MinecraftMod {
      */
     private fun search(key: String, filer: Filter, cssQuery: String, page: Int): MutableList<SearchResult> {
         val searchResultsList = mutableListOf<SearchResult>()
-        val url = "$URL/s?key=$key&filter=${filer.ordinal}&page=$page"
+        val url = "$SEARCH_URL/s?key=$key&filter=${filer.ordinal}&page=$page"
         val elements = HttpUtil.documentSelect(HttpUtil.getDocument(url), cssQuery)
         elements.forEach {
             searchResultsList.add(SearchResult(it.text(), it.attr("href"), filer))
