@@ -53,16 +53,30 @@ object HttpUtil {
     fun documentSelect(document: Document, cssQuery: String): Elements {
         return document.select(cssQuery)
     }
+
+    /**
+     * ### post 请求
+     */
+    fun post(url: String,body :RequestBody): String {
+        val request = Request.Builder()
+            .url(url)
+            .post(body)
+            .build()
+        return okHttpClient.newCall(request).execute().body!!.string()
+    }
 }
 
 // user agent 拦截器
-class AgentInterceptor : Interceptor{
+class AgentInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         // 拦截请求，移除默认 User-Agent
         val request = chain.request()
             .newBuilder()
             .removeHeader("User-Agent")
-            .addHeader("User-Agent","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36")
+            .addHeader(
+                "User-Agent",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+            )
             .build()
         return chain.proceed(request)
     }

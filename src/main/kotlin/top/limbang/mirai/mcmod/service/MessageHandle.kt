@@ -30,13 +30,30 @@ object MessageHandle {
     }
 
     /**
+     * 整合包消息处理
+     */
+    suspend fun integrationPackageHandle(url: String, event: MessageEvent) {
+        val integrationPackage = MinecraftMod.parseIntegrationPackage(url)
+
+        val forwardMessageBuilder = ForwardMessageBuilder(event.subject)
+        forwardMessageBuilder.add(event.bot, readImage(integrationPackage.iconUrl, event))
+        var name = ""
+        if (integrationPackage.shortName.isNotEmpty()) name += "缩写:${integrationPackage.shortName}\n"
+        if (integrationPackage.name.isNotEmpty()) name += "全称:${integrationPackage.name}\n"
+        forwardMessageBuilder.add(event.bot, PlainText(name))
+        forwardMessageBuilder.add(event.bot, PlainText(url))
+        introductionMessage(forwardMessageBuilder, integrationPackage.introduction, event)
+        event.subject.sendMessage(forwardMessageBuilder.build())
+    }
+
+    /**
      * 资料消息处理
      */
     suspend fun dataHandle(url: String, event: MessageEvent) {
         val item = MinecraftMod.parseItem(url)
 
         val forwardMessageBuilder = ForwardMessageBuilder(event.subject)
-        if(item.iconUrl.isNotEmpty()) forwardMessageBuilder.add(event.bot, readImage(item.iconUrl, event))
+        if (item.iconUrl.isNotEmpty()) forwardMessageBuilder.add(event.bot, readImage(item.iconUrl, event))
         forwardMessageBuilder.add(event.bot, PlainText(item.name))
         forwardMessageBuilder.add(event.bot, PlainText(url))
         introductionMessage(forwardMessageBuilder, item.introduction, event)
@@ -59,6 +76,24 @@ object MessageHandle {
         event.subject.sendMessage(forwardMessageBuilder.build())
     }
 
+    /**
+     * 服务器消息处理
+     */
+    suspend fun service(url: String, event: MessageEvent) {
+        val service = MinecraftMod.parseServer(url)
+
+        val forwardMessageBuilder = ForwardMessageBuilder(event.subject)
+        if (service.iconUrl.isNotEmpty()) forwardMessageBuilder.add(event.bot, readImage(service.iconUrl, event))
+        forwardMessageBuilder.add(event.bot, PlainText(service.name))
+        forwardMessageBuilder.add(
+            event.bot,
+            PlainText("发布人:${service.publisher}\n类型:${service.type}\nQQ群:${service.qqGroup}\n评分:${service.score}")
+        )
+        forwardMessageBuilder.add(event.bot, PlainText(url))
+        introductionMessage(forwardMessageBuilder, service.introduction, event)
+
+        event.subject.sendMessage(forwardMessageBuilder.build())
+    }
 
     /**
      * 处理内容里面的图片，并上传图片
@@ -86,7 +121,10 @@ object MessageHandle {
                 val maxLength = 1500
                 val n = it.length / maxLength + if (it.length % maxLength != 0) 1 else 0
                 for (j in 0 until n)
-                    forwardMessageBuilder.add(event.bot, PlainText(it.substring(j*maxLength, min((j+1)*maxLength, it.length))))
+                    forwardMessageBuilder.add(
+                        event.bot,
+                        PlainText(it.substring(j * maxLength, min((j + 1) * maxLength, it.length)))
+                    )
                 // forwardMessageBuilder.add(event.bot, PlainText(it))
             }
             if (i < imgList.size) {
@@ -110,15 +148,18 @@ object MessageHandle {
             if (file.exists()) {
                 file.readBytes().toExternalResource()
             } else {
-                HttpUtil.downloadImage(when {
-                    url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
-                    url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
-                    else -> url
-                }, file).toExternalResource()
+                HttpUtil.downloadImage(
+                    when {
+                        url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
+                        url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
+                        else -> url
+                    }, file
+                ).toExternalResource()
             }
         }
         val uploadImage = event.subject.uploadImage(imageExternalResource)
         imageExternalResource.close()
         return uploadImage
     }
+
 }

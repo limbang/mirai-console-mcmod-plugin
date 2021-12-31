@@ -1,22 +1,28 @@
 package top.limbang.mirai.mcmod.service
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.FormBody
 import org.jsoup.Jsoup
 import org.jsoup.safety.Whitelist
 import org.jsoup.select.Elements
+import top.limbang.mirai.mcmod.extension.substringBetween
 import top.limbang.mirai.mcmod.service.Filter.*
 
 object MinecraftMod {
 
     private const val URL = "https://www.mcmod.cn"
     private const val SEARCH_URL = "https://search.mcmod.cn"
+    private const val SERVER_URL = "https://play.mcmod.cn"
     private const val SEARCH_RESULT = ".result-item > .head > a"
     private const val INTRODUCTION_TEXT = "[class=text-area common-text font14]"
     private const val INTRODUCTION_ITEM = "[class=item-content common-text font14]"
-    private const val INTRODUCTION_POST= "[class=post-content common-text font14]"
+    private const val INTRODUCTION_POST = "[class=post-content common-text font14]"
     private const val NAME = ".name"
     private const val SHORT_NAME = ".short-name"
-    private const val CN_NAME = ".class-title > h3"
-    private const val EN_NAME = ".class-title > h4"
+    private const val H3_NAME = ".class-title > h3"
+    private const val H4_NAME = ".class-title > h4"
     private const val ICON_URL = ".class-cover-image > img"
     private const val TAB_URL = "[class=common-icon-text item-table] > a"
 
@@ -41,12 +47,26 @@ object MinecraftMod {
                 if (this.contains("https")) this else "https:$this"
             },
             document.select(SHORT_NAME).text(),
-            document.select(CN_NAME).text(),
-            document.select(EN_NAME).text(),
+            document.select(H3_NAME).text(),
+            document.select(H4_NAME).text(),
             labelReplacement(document.select(INTRODUCTION_TEXT))
         )
     }
 
+    /**
+     * ### 解析百科整合包
+     */
+    fun parseIntegrationPackage(url: String): IntegrationPackage {
+        val document = HttpUtil.getDocument(url)
+        return IntegrationPackage(
+            document.select(ICON_URL).attr("src").run {
+                if (this.contains("https")) this else "https:$this"
+            },
+            document.select(SHORT_NAME).text().substringBetween("[", "]"),
+            document.select(H3_NAME).text(),
+            labelReplacement(document.select(INTRODUCTION_TEXT))
+        )
+    }
 
     /**
      * ### 解析百科物品
@@ -76,6 +96,24 @@ object MinecraftMod {
     }
 
     /**
+     * ### 解析百科服务器
+     */
+    fun parseServer(url: String): Server {
+        val document = HttpUtil.getDocument(url)
+        val elements = document.select(".server-info-ext > li > span")
+
+        return Server(
+            document.select(".favicon > img").attr("src"),
+            document.select(".link > h6").text(),
+            elements[0].text(),
+            elements[3].text(),
+            elements[7].text(),
+            document.select(".score-avg > .score-number").text(),
+            labelReplacement(document.select(".common-text > .col-lg-12"))
+        )
+    }
+
+    /**
      * ### 替换标签内容
      */
     private fun labelReplacement(elements: Elements): String {
@@ -98,12 +136,34 @@ object MinecraftMod {
      */
     private fun search(key: String, filer: Filter, cssQuery: String, page: Int): MutableList<SearchResult> {
         val searchResultsList = mutableListOf<SearchResult>()
-        val url = "$SEARCH_URL/s?key=$key&filter=${filer.ordinal}&page=$page"
-        val elements = HttpUtil.documentSelect(HttpUtil.getDocument(url), cssQuery)
-        elements.forEach {
-            searchResultsList.add(SearchResult(it.text(), it.attr("href"), filer))
+        return if (filer == SERVER) {
+            val url = "$SERVER_URL/frame/serverList/"
+            val body = FormBody.Builder()
+                .add(
+                    "data",
+                    "{\"0\":{\"type\":\"search\",\"id\":\"$key\",\"see\":0},\"page\":$page,\"showOffline\":1,\"showModonly\":0}"
+                )
+                .build()
+            val responseBody = HttpUtil.post(url, body)
+            val html = Json.parseToJsonElement(responseBody).jsonObject["html"]!!.jsonPrimitive!!.content
+            val elements = HttpUtil.documentSelect(HttpUtil.parseBody(html), ".col-lg-12 > a")
+            elements.forEach {
+                if (it.text().isNotEmpty()) {
+                    searchResultsList.add(SearchResult(it.text(), SERVER_URL + it.attr("href"), filer))
+                }
+            }
+            searchResultsList
+        } else {
+            val url = "$SEARCH_URL/s?key=$key&filter=${filer.ordinal}&page=$page"
+            val elements = HttpUtil.documentSelect(HttpUtil.getDocument(url), cssQuery)
+            elements.forEach {
+                if (it.text().isNotEmpty()) {
+                    searchResultsList.add(SearchResult(it.text(), it.attr("href"), filer))
+                }
+            }
+            searchResultsList
         }
-        return searchResultsList
+
     }
 }
 
@@ -168,4 +228,27 @@ data class Item(
     val name: String = "",
     val introduction: String = "",
     val tabUrl: String = ""
+)
+
+/**
+ * ### 整合包实体
+ */
+data class IntegrationPackage(
+    val iconUrl: String = "",
+    val shortName: String = "",
+    val name: String = "",
+    val introduction: String = ""
+)
+
+/**
+ * ### 服务器实体
+ */
+data class Server(
+    val iconUrl: String = "",
+    val name: String = "",
+    val publisher: String = "",
+    val type: String = "",
+    val qqGroup: String = "",
+    val score : String = "",
+    val introduction: String = ""
 )
