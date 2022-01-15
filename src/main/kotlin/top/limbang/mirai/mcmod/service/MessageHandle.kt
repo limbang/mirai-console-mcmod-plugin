@@ -5,6 +5,7 @@ import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import top.limbang.mirai.mcmod.MiraiConsoleMcmodPlugin
 import top.limbang.mirai.mcmod.extension.substringBetween
 import java.io.File
 import java.util.*
@@ -144,7 +145,7 @@ object MessageHandle {
             Base64.getDecoder().decode(url.substring(base64Prefix.length)).toExternalResource()
         } else {
             val imgFileName = url.substringAfterLast("/").substringBefore("?")
-            val file = File("data/top.limbang.mirai-console-mcmod-plugin/img/$imgFileName")
+            val file = MiraiConsoleMcmodPlugin.resolveDataFile("img/$imgFileName")
             if (file.exists()) {
                 file.readBytes().toExternalResource()
             } else {
