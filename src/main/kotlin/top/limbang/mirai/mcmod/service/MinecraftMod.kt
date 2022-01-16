@@ -5,7 +5,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.FormBody
 import org.jsoup.Jsoup
-import org.jsoup.safety.Whitelist
+import org.jsoup.safety.Safelist
 import org.jsoup.select.Elements
 import top.limbang.mirai.mcmod.extension.substringBetween
 import top.limbang.mirai.mcmod.service.Filter.*
@@ -117,7 +117,7 @@ object MinecraftMod {
      * ### 替换标签内容
      */
     private fun labelReplacement(elements: Elements): String {
-        val whitelist = Whitelist()
+        val whitelist = Safelist()
         whitelist.addTags("p")
         whitelist.addAttributes("img", "data-src")
         var body = Jsoup.clean(elements.html(), whitelist)
@@ -145,7 +145,7 @@ object MinecraftMod {
                 )
                 .build()
             val responseBody = HttpUtil.post(url, body)
-            val html = Json.parseToJsonElement(responseBody).jsonObject["html"]!!.jsonPrimitive!!.content
+            val html = Json.parseToJsonElement(responseBody).jsonObject["html"]!!.jsonPrimitive.content
             val elements = HttpUtil.documentSelect(HttpUtil.parseBody(html), ".col-lg-12 > a")
             elements.forEach {
                 if (it.text().isNotEmpty()) {
