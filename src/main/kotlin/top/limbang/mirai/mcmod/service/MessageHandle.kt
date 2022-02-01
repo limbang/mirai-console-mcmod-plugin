@@ -124,8 +124,8 @@ object MessageHandle {
                 totalLength += it.length
                 // 增加总长度限制
                 if (totalLength > 4500) {
-                    forwardMessageBuilder.add(event.bot, "介绍内容过长，请通过访问原文链接查看完整内容！")
-                    break
+                    forwardMessageBuilder.add(event.bot, PlainText("介绍内容过长，请通过访问原文链接查看完整内容！"))
+                    return
                 }
                 val maxLength = 1500
                 val n = it.length / maxLength + if (it.length % maxLength != 0) 1 else 0
