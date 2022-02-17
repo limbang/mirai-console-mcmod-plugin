@@ -1,5 +1,6 @@
 package top.limbang.mirai.mcmod.service
 
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Image
@@ -7,8 +8,11 @@ import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import top.limbang.mirai.mcmod.MiraiConsoleMcmodPlugin
 import top.limbang.mirai.mcmod.extension.substringBetween
-import java.io.File
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.EOFException
 import java.util.*
+import javax.imageio.ImageIO
 import kotlin.math.min
 
 object MessageHandle {
@@ -166,7 +170,14 @@ object MessageHandle {
                 ).toExternalResource()
             }
         }
-        val uploadImage = event.subject.uploadImage(imageExternalResource)
+        val uploadImage = try {
+            event.subject.uploadImage(imageExternalResource)
+        } catch(e : EOFException){
+            val img =  ImageIO.read(imageExternalResource.inputStream())
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            ImageIO.write(img,"jpg", byteArrayOutputStream)
+            event.subject.uploadImage(ByteArrayInputStream(byteArrayOutputStream.toByteArray()))
+        }
         imageExternalResource.close()
         return uploadImage
     }
