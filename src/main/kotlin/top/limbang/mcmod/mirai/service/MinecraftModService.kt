@@ -2,7 +2,6 @@ package top.limbang.mcmod.mirai.service
 
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
@@ -13,12 +12,12 @@ class MinecraftModService {
     private var page: Int = 1
     private var nextPage: Boolean = false
 
-    private fun search(key: String, filer: Filter) {
+    private fun search(key: String, filer: SearchFilter) {
         searchResultsList.addAll(MinecraftMod.search(key, filer, page))
         nextPage = searchResultsList.size == 30
     }
 
-    fun getSearchList(key: String, filer: Filter, entry: Int): List<SearchResult> {
+    fun getSearchList(key: String, filer: SearchFilter, entry: Int): List<SearchResult> {
         if (page == 1) {
             search(key, filer);
             page++

@@ -8,8 +8,9 @@ import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.nextEventOrNull
 import net.mamoe.mirai.event.subscribeMessages
+import net.mamoe.mirai.message.data.MessageSourceKind
 import net.mamoe.mirai.message.data.content
-import top.limbang.mcmod.mirai.service.Filter
+import top.limbang.mcmod.mirai.service.SearchFilter
 import top.limbang.mcmod.mirai.service.MessageHandle
 import top.limbang.mcmod.mirai.service.MinecraftModService
 import top.limbang.mcmod.mirai.service.SearchResult
@@ -18,7 +19,7 @@ import top.limbang.mcmod.mirai.service.SearchResult
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "1.2.2",
+        version = "2.0.0",
     ) {
         author("limbang")
         info("""mc百科查询""")
@@ -30,28 +31,28 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
         McmodPluginData.reload()
         McmodPluginCompositeCommand.register()
         // 读取查询自定义命令
-        val module = McmodPluginData.queryCommand[Filter.MODULE] ?: "百科模组"
-        val data = McmodPluginData.queryCommand[Filter.DATA] ?: "百科资料"
-        val courseOfStudy = McmodPluginData.queryCommand[Filter.COURSE_OF_STUDY] ?: "百科教程"
-        val integrationPackage = McmodPluginData.queryCommand[Filter.INTEGRATION_PACKAGE] ?: "百科整合包"
-        val server = McmodPluginData.queryCommand[Filter.SERVER] ?: "百科服务器"
+        val module = McmodPluginData.queryCommand[SearchFilter.MODULE] ?: "百科模组"
+        val item = McmodPluginData.queryCommand[SearchFilter.ITEM] ?: "百科资料"
+        val courseOfStudy = McmodPluginData.queryCommand[SearchFilter.COURSE] ?: "百科教程"
+        val integrationPackage = McmodPluginData.queryCommand[SearchFilter.MODULE_PACKAGE] ?: "百科整合包"
+        val server = McmodPluginData.queryCommand[SearchFilter.SERVER] ?: "百科服务器"
 
         globalEventChannel().subscribeMessages {
-            (startsWith(module) or startsWith(data) or startsWith(courseOfStudy) or
+            (startsWith(module) or startsWith(item) or startsWith(courseOfStudy) or
                     startsWith(integrationPackage) or startsWith(server)) reply {
                 val msg = it.trim()
                 val searchMessage = when {
-                    msg.startsWith(module) -> SearchMessage(Filter.MODULE, msg.substringAfter(module))
-                    msg.startsWith(data) -> SearchMessage(Filter.DATA, msg.substringAfter(data))
+                    msg.startsWith(module) -> SearchMessage(SearchFilter.MODULE, msg.substringAfter(module))
+                    msg.startsWith(item) -> SearchMessage(SearchFilter.ITEM, msg.substringAfter(item))
                     msg.startsWith(courseOfStudy) -> SearchMessage(
-                        Filter.COURSE_OF_STUDY,
+                        SearchFilter.COURSE,
                         msg.substringAfter(courseOfStudy)
                     )
                     msg.startsWith(integrationPackage) -> SearchMessage(
-                        Filter.INTEGRATION_PACKAGE,
+                        SearchFilter.MODULE_PACKAGE,
                         msg.substringAfter(integrationPackage)
                     )
-                    msg.startsWith(server) -> SearchMessage(Filter.SERVER,msg.substringAfter(server))
+                    msg.startsWith(server) -> SearchMessage(SearchFilter.SERVER,msg.substringAfter(server))
                     else -> return@reply "未知错误!!!"
                 }
                 if (searchMessage.key.isEmpty()) return@reply "查询内容不能为空!!!"
@@ -78,13 +79,13 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
             }
         }
 
-        if (McmodPluginData.nudgeEnabled) {
+        if (McmodPluginConfig.isNudgeEnabled) {
             // 监听戳一戳消息并回复帮助
             globalEventChannel().subscribeAlways<NudgeEvent> {
                 if (target.id == bot.id) {
                     subject.sendMessage(
                         "Minecraft百科查询插件使用说明:\n" +
-                                "查询物品:$data 加物品名称\n" +
+                                "查询物品:$item 加物品名称\n" +
                                 "查询模组:$module 加模组名称\n" +
                                 "查询教程:$courseOfStudy 加教程名称\n" +
                                 "查询整合包:$integrationPackage 加整合包名称\n" +
@@ -96,6 +97,20 @@ object MiraiConsoleMcmodPlugin : KotlinPlugin(
             }
         }
     }
+
+    /**
+     * ### 根据配置过滤回复的消息类型
+     * @param kind 消息类型
+     * @return true:过滤 false:不过滤
+     */
+    private fun isMessageKindFilter(kind: MessageSourceKind): Boolean {
+        return when (kind) {
+            MessageSourceKind.GROUP -> !McmodPluginConfig.isGroupMessagesEnabled
+            MessageSourceKind.FRIEND -> !McmodPluginConfig.isFriendMessagesEnabled
+            MessageSourceKind.TEMP -> !McmodPluginConfig.isTempMessagesEnabled
+            MessageSourceKind.STRANGER -> !McmodPluginConfig.isStrangerMessagesEnabled
+        }
+    }
 }
 
 suspend fun getSearchResults(serialNumber: Int, list: List<SearchResult>, event: MessageEvent): Any {
@@ -103,14 +118,14 @@ suspend fun getSearchResults(serialNumber: Int, list: List<SearchResult>, event:
 
     val searchResults = list[serialNumber]
     return when (searchResults.filter) {
-        Filter.MODULE -> MessageHandle.moduleHandle(searchResults.url, event)
-        Filter.DATA -> MessageHandle.dataHandle(searchResults.url, event)
-        Filter.COURSE_OF_STUDY -> MessageHandle.courseOfStudyHandle(searchResults.url, event)
-        Filter.INTEGRATION_PACKAGE -> MessageHandle.integrationPackageHandle(searchResults.url, event)
-        Filter.SERVER -> MessageHandle.service(searchResults.url, event)
+        SearchFilter.MODULE -> MessageHandle.moduleHandle(searchResults.url, event)
+        SearchFilter.ITEM -> MessageHandle.dataHandle(searchResults.url, event)
+        SearchFilter.COURSE -> MessageHandle.courseOfStudyHandle(searchResults.url, event)
+        SearchFilter.MODULE_PACKAGE -> MessageHandle.integrationPackageHandle(searchResults.url, event)
+        SearchFilter.SERVER -> MessageHandle.service(searchResults.url, event)
         else -> Unit
     }
 }
 
-data class SearchMessage(val filter: Filter, val key: String)
+data class SearchMessage(val filter: SearchFilter, val key: String)
 

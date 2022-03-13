@@ -8,7 +8,7 @@ import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
 import org.jsoup.select.Elements
 import top.limbang.mcmod.mirai.extension.substringBetween
-import top.limbang.mcmod.mirai.service.Filter.*
+import top.limbang.mcmod.mirai.service.SearchFilter.*
 
 object MinecraftMod {
 
@@ -29,10 +29,10 @@ object MinecraftMod {
     /**
      * ### 搜索的结果列表
      * @param key 关键词
-     * @param filer 分类过滤 参考:[Filter]
+     * @param filer 分类过滤 参考:[SearchFilter]
      * @param page 页数
      */
-    fun search(key: String, filer: Filter, page: Int): MutableList<SearchResult> {
+    fun search(key: String, filer: SearchFilter, page: Int): MutableList<SearchResult> {
         return search(key, filer, SEARCH_RESULT, page)
     }
 
@@ -130,11 +130,11 @@ object MinecraftMod {
     /**
      * ### 搜索
      * @param key 关键词
-     * @param filer 分类过滤 参考:[Filter]
+     * @param filer 分类过滤 参考:[SearchFilter]
      * @param cssQuery css查询语句
      * @param page 页数
      */
-    private fun search(key: String, filer: Filter, cssQuery: String, page: Int): MutableList<SearchResult> {
+    private fun search(key: String, filer: SearchFilter, cssQuery: String, page: Int): MutableList<SearchResult> {
         val searchResultsList = mutableListOf<SearchResult>()
         return if (filer == SERVER) {
             val url = "$SERVER_URL/frame/serverList/"
@@ -172,20 +172,20 @@ object MinecraftMod {
  * ### 搜索过滤分类
  * - [ALL] 全部
  * - [MODULE] 模组
- * - [INTEGRATION_PACKAGE] 整合包
- * - [DATA] 资料
- * - [COURSE_OF_STUDY] 教程
+ * - [MODULE_PACKAGE] 整合包
+ * - [ITEM] 资料
+ * - [COURSE] 教程
  * - [AUTHOR] 作者
  * - [USER] 用户
  * - [COMMUNITY] 社群
  * - [SERVER] 服务器
  */
-enum class Filter {
+enum class SearchFilter {
     ALL,
     MODULE,
-    INTEGRATION_PACKAGE,
-    DATA,
-    COURSE_OF_STUDY,
+    MODULE_PACKAGE,
+    ITEM,
+    COURSE,
     AUTHOR,
     USER,
     COMMUNITY,
@@ -198,7 +198,7 @@ enum class Filter {
 data class SearchResult(
     val title: String,
     val url: String,
-    val filter: Filter
+    val filter: SearchFilter
 )
 
 /**
