@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod.service
+package top.limbang.mcmod.mirai.service
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject

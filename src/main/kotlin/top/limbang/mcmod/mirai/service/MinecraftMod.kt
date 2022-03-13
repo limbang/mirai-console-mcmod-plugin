@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod.service
+package top.limbang.mcmod.mirai.service
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -7,8 +7,8 @@ import okhttp3.FormBody
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
 import org.jsoup.select.Elements
-import top.limbang.mirai.mcmod.extension.substringBetween
-import top.limbang.mirai.mcmod.service.Filter.*
+import top.limbang.mcmod.mirai.extension.substringBetween
+import top.limbang.mcmod.mirai.service.Filter.*
 
 object MinecraftMod {
 

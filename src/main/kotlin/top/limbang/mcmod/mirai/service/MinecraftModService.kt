@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod.service
+package top.limbang.mcmod.mirai.service
 
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact

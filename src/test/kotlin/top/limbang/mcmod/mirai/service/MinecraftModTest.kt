@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod.service
+package top.limbang.mcmod.mirai.service
 
 import org.junit.jupiter.api.Test
 

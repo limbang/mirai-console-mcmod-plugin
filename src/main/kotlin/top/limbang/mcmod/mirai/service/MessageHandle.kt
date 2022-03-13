@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod.service
+package top.limbang.mcmod.mirai.service
 
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
@@ -6,8 +6,8 @@ import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
-import top.limbang.mirai.mcmod.MiraiConsoleMcmodPlugin
-import top.limbang.mirai.mcmod.extension.substringBetween
+import top.limbang.mcmod.mirai.MiraiConsoleMcmodPlugin
+import top.limbang.mcmod.mirai.extension.substringBetween
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.EOFException

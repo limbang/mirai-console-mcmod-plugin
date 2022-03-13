@@ -1,4 +1,4 @@
-package top.limbang.mirai.mcmod
+package top.limbang.mcmod.mirai
 
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandSender
@@ -14,10 +14,10 @@ import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.nextEventOrNull
 import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.data.content
-import top.limbang.mirai.mcmod.service.Filter
-import top.limbang.mirai.mcmod.service.MessageHandle
-import top.limbang.mirai.mcmod.service.MinecraftModService
-import top.limbang.mirai.mcmod.service.SearchResult
+import top.limbang.mcmod.mirai.service.Filter
+import top.limbang.mcmod.mirai.service.MessageHandle
+import top.limbang.mcmod.mirai.service.MinecraftModService
+import top.limbang.mcmod.mirai.service.SearchResult
 
 
 object MiraiConsoleMcmodPlugin : KotlinPlugin(
