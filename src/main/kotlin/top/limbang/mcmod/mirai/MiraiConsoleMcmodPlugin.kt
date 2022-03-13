@@ -1,11 +1,6 @@
 package top.limbang.mcmod.mirai
 
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
-import net.mamoe.mirai.console.command.CommandSender
-import net.mamoe.mirai.console.command.CompositeCommand
-import net.mamoe.mirai.console.data.AutoSavePluginData
-import net.mamoe.mirai.console.data.ValueDescription
-import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.event.events.MessageEvent
@@ -119,31 +114,3 @@ suspend fun getSearchResults(serialNumber: Int, list: List<SearchResult>, event:
 
 data class SearchMessage(val filter: Filter, val key: String)
 
-/**
- * ### 插件数据
- */
-object McmodPluginData : AutoSavePluginData("mcmod") {
-    val queryCommand: MutableMap<Filter, String> by value()
-
-    @ValueDescription("是否启用戳一戳回复功能 true:启用 false:禁用")
-    var nudgeEnabled: Boolean by value(true)
-}
-
-/**
- * ### 插件指令
- */
-object McmodPluginCompositeCommand : CompositeCommand(
-    MiraiConsoleMcmodPlugin, "mcmod"
-) {
-    @SubCommand("setQueryCommand", "查询命令")
-    suspend fun CommandSender.setQueryCommand(type: Filter, command: String) {
-        sendMessage("原查询$type 命令<${McmodPluginData.queryCommand[type]}>更改为<$command>,重启后生效")
-        McmodPluginData.queryCommand[type] = command
-    }
-
-    @SubCommand("setNudgeEnabled", "戳一戳启用")
-    suspend fun CommandSender.setNudgeEnabled(enabled: Boolean) {
-        McmodPluginData.nudgeEnabled = enabled
-        sendMessage("OK")
-    }
-}
