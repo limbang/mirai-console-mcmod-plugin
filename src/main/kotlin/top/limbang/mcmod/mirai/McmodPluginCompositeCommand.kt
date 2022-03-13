@@ -8,7 +8,7 @@ import top.limbang.mcmod.mirai.service.SearchFilter
  * ### 插件指令
  */
 object McmodPluginCompositeCommand : CompositeCommand(
-    MiraiConsoleMcmodPlugin, "mcmod"
+    McmodPlugin, "mcmod"
 ) {
     @SubCommand("setQueryCommand", "查询命令")
     suspend fun CommandSender.setQueryCommand(type: SearchFilter, command: String) {

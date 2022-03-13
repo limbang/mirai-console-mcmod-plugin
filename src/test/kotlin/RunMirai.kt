@@ -4,7 +4,7 @@ import net.mamoe.mirai.console.MiraiConsole
 import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.enable
 import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.load
 import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
-import top.limbang.mcmod.mirai.MiraiConsoleMcmodPlugin
+import top.limbang.mcmod.mirai.McmodPlugin
 import java.io.FileInputStream
 import java.util.*
 
@@ -12,8 +12,8 @@ suspend fun main() {
     MiraiConsoleTerminalLoader.startAsDaemon()
 
     // 直接加载插件
-    MiraiConsoleMcmodPlugin.load()
-    MiraiConsoleMcmodPlugin.enable()
+    McmodPlugin.load()
+    McmodPlugin.enable()
 
     // 读取账号配置
     val pros = Properties()
