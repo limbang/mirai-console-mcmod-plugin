@@ -2,7 +2,7 @@ package top.limbang.mcmod.mirai
 
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.CompositeCommand
-import top.limbang.mcmod.mirai.service.SearchFilter
+import top.limbang.mcmod.network.model.SearchFilter
 
 /**
  * ### 插件指令

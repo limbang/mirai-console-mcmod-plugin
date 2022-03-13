@@ -12,7 +12,7 @@ import net.mamoe.mirai.message.data.MessageSourceKind
 import net.mamoe.mirai.message.data.kind
 import net.mamoe.mirai.message.data.source
 import top.limbang.mcmod.mirai.McmodPluginData.queryCommand
-import top.limbang.mcmod.mirai.service.SearchFilter
+import top.limbang.mcmod.network.model.SearchFilter
 
 
 object McmodPlugin : KotlinPlugin(

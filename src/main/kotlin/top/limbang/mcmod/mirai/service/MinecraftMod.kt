@@ -8,7 +8,9 @@ import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
 import org.jsoup.select.Elements
 import top.limbang.mcmod.mirai.extension.substringBetween
-import top.limbang.mcmod.mirai.service.SearchFilter.*
+import top.limbang.mcmod.network.model.SearchFilter
+import top.limbang.mcmod.network.model.SearchFilter.SERVER
+import top.limbang.mcmod.network.model.SearchResult
 
 object MinecraftMod {
 
@@ -149,7 +151,7 @@ object MinecraftMod {
             val elements = HttpUtil.documentSelect(HttpUtil.parseBody(html), ".col-lg-12 > a")
             elements.forEach {
                 if (it.text().isNotEmpty()) {
-                    searchResultsList.add(SearchResult(it.text(), SERVER_URL + it.attr("href"), filer))
+                    searchResultsList.add(SearchResult(it.text(), SERVER_URL + it.attr("href")))
                 }
             }
             searchResultsList
@@ -158,7 +160,7 @@ object MinecraftMod {
             val elements = HttpUtil.documentSelect(HttpUtil.getDocument(url), cssQuery)
             elements.forEach {
                 if (it.text().isNotEmpty()) {
-                    searchResultsList.add(SearchResult(it.text(), it.attr("href"), filer))
+                    searchResultsList.add(SearchResult(it.text(), it.attr("href")))
                 }
             }
             searchResultsList
@@ -167,39 +169,6 @@ object MinecraftMod {
     }
 }
 
-
-/**
- * ### 搜索过滤分类
- * - [ALL] 全部
- * - [MODULE] 模组
- * - [MODULE_PACKAGE] 整合包
- * - [ITEM] 资料
- * - [COURSE] 教程
- * - [AUTHOR] 作者
- * - [USER] 用户
- * - [COMMUNITY] 社群
- * - [SERVER] 服务器
- */
-enum class SearchFilter {
-    ALL,
-    MODULE,
-    MODULE_PACKAGE,
-    ITEM,
-    COURSE,
-    AUTHOR,
-    USER,
-    COMMUNITY,
-    SERVER
-}
-
-/**
- * ### 搜索结果
- */
-data class SearchResult(
-    val title: String,
-    val url: String,
-    val filter: SearchFilter
-)
 
 /**
  * ### 模组实体

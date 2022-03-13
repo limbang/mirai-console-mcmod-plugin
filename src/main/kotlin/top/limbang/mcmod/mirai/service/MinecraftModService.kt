@@ -5,6 +5,8 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.ForwardMessageBuilder
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
+import top.limbang.mcmod.network.model.SearchFilter
+import top.limbang.mcmod.network.model.SearchResult
 
 class MinecraftModService {
 
