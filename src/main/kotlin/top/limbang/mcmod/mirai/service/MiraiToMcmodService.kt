@@ -1,5 +1,6 @@
 package top.limbang.mcmod.mirai.service
 
+import com.sun.xml.internal.ws.commons.xmlutil.Converter.toMessage
 import kotlinx.coroutines.withTimeoutOrNull
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -23,7 +24,7 @@ object MiraiToMcmodService {
      */
     suspend fun MessageEvent.toMcmodSearch(key: String, filter: SearchFilter): Message {
         var pagingStoragePage = 1
-        runCatching { mcmodService.search(key, filter, pagingStoragePage) }.onSuccess {
+        runCatching { mcmodService.search(key, filter.ordinal, pagingStoragePage) }.onSuccess {
             // 未搜索到内容回复
             if (it.isEmpty()) return PlainText("没有找到与“ $key ”有关的内容")
             // 判断搜索到的结果是否只有一条,是就直接返回具体内容
@@ -41,7 +42,8 @@ object MiraiToMcmodService {
 
             var nextEvent: MessageEvent
             do {
-                val forwardMessage = pagingStorage.getPageList(pagingStoragePage).toMessage(this)
+                val list = pagingStorage.getPageList(pagingStoragePage)
+                val forwardMessage = list.toMessage(this, pagingStoragePage == 1)
                 val listMessage = subject.sendMessage(forwardMessage)
                 // 获取下一条消息事件
                 nextEvent = withTimeoutOrNull(30000) {
@@ -60,7 +62,7 @@ object MiraiToMcmodService {
                         }
                         // 获取下一页的数据,大小如果小于页面设置的默认值且有下一页就获取下请求
                         if (size < McmodPluginConfig.pageSize && isNextPage) {
-                            runCatching { mcmodService.search(key, filter, page) }.onSuccess { nextList ->
+                            runCatching { mcmodService.search(key, filter.ordinal, page) }.onSuccess { nextList ->
                                 isNextPage = nextList.size == 30
                                 pagingStorage.addAll(nextList)
                                 page++
@@ -78,7 +80,7 @@ object MiraiToMcmodService {
                     }
                     // 判断是否选择了序号
                     nextMessage.toIntOrNull() != null -> {
-                        if (nextMessage.toInt() > McmodPluginConfig.pageSize) return PlainText("输入的序号过大")
+                        if (nextMessage.toInt() > list.size) return PlainText("输入的序号过大")
                         if (nextMessage.toInt() < 0) return PlainText("输入的序号过小")
                         // TODO 逻辑
                         return PlainText("")
@@ -97,8 +99,9 @@ object MiraiToMcmodService {
     /**
      * ### 把搜索的结果转换成 [ForwardMessage] 消息
      * @param event 消息事件
+     * @param isFirst 是否是第一页
      */
-    private fun List<SearchResult>.toMessage(event: MessageEvent): ForwardMessage {
+    private fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean): ForwardMessage {
         return with(event) {
             buildForwardMessage {
                 bot says "30秒内回复编号查看"
@@ -109,7 +112,11 @@ object MiraiToMcmodService {
                         .replace("\\s*-\\s*".toRegex(), "-")
                     bot.id named i.toString() says title
                 }
-                bot says "回复:[P]上一页 [N]下一页"
+                when {
+                    this@toMessage.size < McmodPluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页"
+                    this@toMessage.size == McmodPluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页 [N]下一页"
+                    this@toMessage.size == McmodPluginConfig.pageSize && isFirst -> bot says "回复:[N]下一页"
+                }
             }
         }
     }
