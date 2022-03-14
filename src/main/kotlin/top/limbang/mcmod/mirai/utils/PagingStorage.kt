@@ -20,6 +20,7 @@ class PagingStorage<E>(private val pageMax: Int) {
      */
     fun getPageList(page: Int): MutableList<E> {
         return if (pageMax * page <= list.size) list.subList(pageMax * page - pageMax, pageMax * page)
-        else list.subList(pageMax * page - pageMax, list.size)
+        else if (pageMax * page - pageMax <= list.size) list.subList(pageMax * page - pageMax, list.size)
+        else throw ArrayIndexOutOfBoundsException()
     }
 }
