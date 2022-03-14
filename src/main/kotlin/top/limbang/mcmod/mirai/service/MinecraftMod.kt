@@ -8,9 +8,8 @@ import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
 import org.jsoup.select.Elements
 import top.limbang.mcmod.mirai.extension.substringBetween
-import top.limbang.mcmod.network.model.SearchFilter
+import top.limbang.mcmod.network.model.*
 import top.limbang.mcmod.network.model.SearchFilter.SERVER
-import top.limbang.mcmod.network.model.SearchResult
 
 object MinecraftMod {
 
@@ -58,9 +57,9 @@ object MinecraftMod {
     /**
      * ### 解析百科整合包
      */
-    fun parseIntegrationPackage(url: String): IntegrationPackage {
+    fun parseIntegrationPackage(url: String): ModulePackage {
         val document = HttpUtil.getDocument(url)
-        return IntegrationPackage(
+        return ModulePackage(
             document.select(ICON_URL).attr("src").run {
                 if (this.contains("https")) this else "https:$this"
             },
@@ -89,9 +88,9 @@ object MinecraftMod {
     /**
      * ### 解析百科教程
      */
-    fun parseCourseOfStudy(url: String): CourseOfStudy {
+    fun parseCourseOfStudy(url: String): Course {
         val document = HttpUtil.getDocument(url)
-        return CourseOfStudy(
+        return Course(
             document.select(NAME).text(),
             labelReplacement(document.select(INTRODUCTION_POST))
         )
@@ -170,54 +169,3 @@ object MinecraftMod {
 }
 
 
-/**
- * ### 模组实体
- */
-data class Module(
-    val iconUrl: String = "",
-    val shortName: String = "",
-    val cnName: String = "",
-    val enName: String = "",
-    val introduction: String = ""
-)
-
-/**
- * ### 教程实体
- */
-data class CourseOfStudy(
-    val name: String = "",
-    val introduction: String = "",
-)
-
-/**
- * ### 物品实体
- */
-data class Item(
-    val iconUrl: String = "",
-    val name: String = "",
-    val introduction: String = "",
-    val tabUrl: String = ""
-)
-
-/**
- * ### 整合包实体
- */
-data class IntegrationPackage(
-    val iconUrl: String = "",
-    val shortName: String = "",
-    val name: String = "",
-    val introduction: String = ""
-)
-
-/**
- * ### 服务器实体
- */
-data class Server(
-    val iconUrl: String = "",
-    val name: String = "",
-    val publisher: String = "",
-    val type: String = "",
-    val qqGroup: String = "",
-    val score : String = "",
-    val introduction: String = ""
-)
