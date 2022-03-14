@@ -3,6 +3,7 @@ package top.limbang.mcmod.network.service
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.Url
+import top.limbang.mcmod.network.model.Item
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchResult
 
@@ -22,6 +23,9 @@ interface McmodService {
         @Query("page") page: Int = 1
     ): List<SearchResult>
 
+    /**
+     * ### 获取物品
+     */
     @GET
-    suspend fun getItem(@Url url:String)
+    suspend fun getItem(@Url url:String) : Item
 }

@@ -1,6 +1,5 @@
 package top.limbang.mcmod.mirai.service
 
-import com.sun.xml.internal.ws.commons.xmlutil.Converter.toMessage
 import kotlinx.coroutines.withTimeoutOrNull
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -9,8 +8,10 @@ import net.mamoe.mirai.event.nextEvent
 import net.mamoe.mirai.message.data.*
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.utils.PagingStorage
+import top.limbang.mcmod.mirai.utils.toMessage
 import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
+import top.limbang.mcmod.network.model.SearchFilter.ITEM
 import top.limbang.mcmod.network.model.SearchResult
 
 object MiraiToMcmodService {
@@ -28,10 +29,8 @@ object MiraiToMcmodService {
             // 未搜索到内容回复
             if (it.isEmpty()) return PlainText("没有找到与“ $key ”有关的内容")
             // 判断搜索到的结果是否只有一条,是就直接返回具体内容
-            if (it.size == 1) {
-                // TODO
-                return PlainText("")
-            }
+            if (it.size == 1) return parseSearchResult(filter, it[0], this)
+
             var page = 2
             // 如果结果数等于30代表有下一页
             var isNextPage = it.size == 30
@@ -82,8 +81,7 @@ object MiraiToMcmodService {
                     nextMessage.toIntOrNull() != null -> {
                         if (nextMessage.toInt() > list.size) return PlainText("输入的序号过大")
                         if (nextMessage.toInt() < 0) return PlainText("输入的序号过小")
-                        // TODO 逻辑
-                        return PlainText("")
+                        return parseSearchResult(filter, list[nextMessage.toInt()], this)
                     }
                     else -> false
                 }
@@ -119,5 +117,26 @@ object MiraiToMcmodService {
                 }
             }
         }
+    }
+
+    /**
+     * ### 解析搜索的结果
+     * @param filter 过滤
+     * @param searchResult 待解析的搜索结果
+     * @param event
+     */
+    private suspend fun parseSearchResult(
+        filter: SearchFilter,
+        searchResult: SearchResult,
+        event: MessageEvent
+    ): Message {
+        when (filter) {
+            ITEM -> {
+                runCatching { mcmodService.getItem(searchResult.url) }.onSuccess {
+                    return it.toMessage(event)
+                }.onFailure { return PlainText("请求失败：${it.message}") }
+            }
+        }
+        return PlainText("未实现")
     }
 }
