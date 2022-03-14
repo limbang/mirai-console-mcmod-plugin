@@ -3,6 +3,7 @@ package top.limbang.mcmod.network
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import top.limbang.mcmod.network.converter.McmodConverterFactory
+import top.limbang.mcmod.network.interceptor.UserAgentInterceptor
 import top.limbang.mcmod.network.service.McmodService
 import java.util.concurrent.TimeUnit
 
@@ -15,6 +16,7 @@ object Service {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
+            .addInterceptor(UserAgentInterceptor())
             .build()
     }
 

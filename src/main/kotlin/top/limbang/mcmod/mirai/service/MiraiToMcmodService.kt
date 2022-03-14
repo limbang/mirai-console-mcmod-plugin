@@ -1,11 +1,14 @@
 package top.limbang.mcmod.mirai.service
 
 import kotlinx.coroutines.withTimeoutOrNull
+import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.nextEvent
 import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import top.limbang.mcmod.mirai.McmodPlugin
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.utils.PagingStorage
 import top.limbang.mcmod.mirai.utils.toMessage
@@ -13,6 +16,11 @@ import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchFilter.ITEM
 import top.limbang.mcmod.network.model.SearchResult
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.EOFException
+import java.util.*
+import javax.imageio.ImageIO
 
 object MiraiToMcmodService {
     /** mcmod API 服务 */
@@ -139,4 +147,39 @@ object MiraiToMcmodService {
         }
         return PlainText("未实现")
     }
+
+    /**
+     * ### 读取图片
+     */
+    suspend fun MessageEvent.readImage(url: String): Image {
+        val base64Prefix = "data:image/png;base64,"
+        val imageExternalResource = if (url.startsWith(base64Prefix)) { // 处理base64情况
+            Base64.getDecoder().decode(url.substring(base64Prefix.length)).toExternalResource()
+        } else {
+            val imgFileName = url.substringAfterLast("/").substringBefore("?")
+            val file = McmodPlugin.resolveDataFile("img/$imgFileName")
+            if (file.exists()) {
+                file.readBytes().toExternalResource()
+            } else {
+                val imgUrl = when {
+                    url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
+                    url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
+                    else -> url
+                }
+                file.writeBytes(mcmodService.downloadFile(imgUrl).bytes())
+                file.readBytes().toExternalResource()
+            }
+        }
+        val uploadImage = try {
+            subject.uploadImage(imageExternalResource)
+        } catch (e: EOFException) {
+            val img = ImageIO.read(imageExternalResource.inputStream())
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            ImageIO.write(img, "jpg", byteArrayOutputStream)
+            subject.uploadImage(ByteArrayInputStream(byteArrayOutputStream.toByteArray()))
+        }
+        imageExternalResource.close()
+        return uploadImage
+    }
+
 }

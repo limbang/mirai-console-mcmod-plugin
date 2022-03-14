@@ -1,5 +1,6 @@
 package top.limbang.mcmod.network.service
 
+import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.Url
@@ -28,4 +29,10 @@ interface McmodService {
      */
     @GET
     suspend fun getItem(@Url url:String) : Item
+
+    /**
+     * ### 下载文件
+     */
+    @GET
+    suspend fun downloadFile(@Url url:String): ResponseBody
 }

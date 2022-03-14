@@ -27,4 +27,30 @@ internal class ServiceTest{
             }
         }
     }
+
+    @Test
+    fun downloadFile(){
+        runBlocking {
+
+            runCatching { service.downloadFile("https://www.mcmod.cn/static/public/images/identicons/29.jpg")}.onSuccess {
+                with(it){
+                    println("contentType:${contentType()}")
+                    println("contentLength:${contentLength()}")
+                    println("bytes:${bytes().contentToString()}")
+                }
+            }.onFailure {
+                println("失败:$it")
+            }
+
+            runCatching { service.downloadFile("https://www.mcmod.cn/pages/center/0/album/20150618/14345582456925.jpg") }.onSuccess {
+               with(it){
+                   println("contentType:${contentType()}")
+                   println("contentLength:${contentLength()}")
+                   println("bytes:${bytes().contentToString()}")
+               }
+            }.onFailure {
+                println("失败:$it")
+            }
+        }
+    }
 }

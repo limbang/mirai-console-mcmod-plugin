@@ -21,7 +21,6 @@ dependencies{
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
     testImplementation(kotlin("test"))
-    testImplementation("ch.qos.logback:logback-classic:1.2.11")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.6.0")
 }

@@ -8,6 +8,9 @@ import top.limbang.mcmod.network.model.SearchResult
 import top.limbang.mcmod.network.utils.TypeToken
 import java.lang.reflect.Type
 
+/**
+ * ### mcmod.cn 的自定义转换工厂
+ */
 class McmodConverterFactory private constructor(): Converter.Factory() {
     override fun responseBodyConverter(
         type: Type,
