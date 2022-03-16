@@ -31,7 +31,7 @@ interface McmodService {
     suspend fun getItem(@Url url:String) : Item
 
     /**
-     * ### 下载文件
+     * ### 下载文件,一次性下载完,大文件会有卡顿
      */
     @GET
     suspend fun downloadFile(@Url url:String): ResponseBody
