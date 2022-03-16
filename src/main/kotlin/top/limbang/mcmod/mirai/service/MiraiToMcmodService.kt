@@ -1,13 +1,15 @@
 package top.limbang.mcmod.mirai.service
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.nextEvent
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import top.limbang.mcmod.mirai.McmodPlugin
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.utils.PagingStorage
@@ -16,9 +18,6 @@ import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchFilter.ITEM
 import top.limbang.mcmod.network.model.SearchResult
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.EOFException
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -156,30 +155,46 @@ object MiraiToMcmodService {
         val imageExternalResource = if (url.startsWith(base64Prefix)) { // 处理base64情况
             Base64.getDecoder().decode(url.substring(base64Prefix.length)).toExternalResource()
         } else {
-            val imgFileName = url.substringAfterLast("/").substringBefore("?")
-            val file = McmodPlugin.resolveDataFile("img/$imgFileName")
-            if (file.exists()) {
+            // 处理 url
+            val imgUrl = when {
+                url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
+                url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
+                else -> url
+            }
+            println(imgUrl.toHttpUrl().encodedPath)
+            println(imgUrl.toHttpUrl())
+
+            val file = McmodPlugin.resolveDataFile("img/${imgUrl.toHttpUrl().encodedPath}")
+            if (file.exists()) { // 判断本地是否已经存储
                 file.readBytes().toExternalResource()
             } else {
-                val imgUrl = when {
-                    url.startsWith("//") -> "https:$url" // 处理双斜杠开头情况"//i.mcmod.cn/..."
-                    url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
-                    else -> url
+                // 判断文件夹是否存在,不存在就创建
+                val fileParent = file.parentFile
+                if (!fileParent.exists()) fileParent.mkdirs()
+
+                // 下载图片
+                val responseBody = mcmodService.downloadFile(imgUrl)
+                val type = responseBody.contentType()
+                val bytes = responseBody.bytes()
+
+                if (type?.subtype == "jpeg") {
+                    if (bytes[bytes.lastIndex].toUByte() != 0xD9.toUByte()) { //意外的JPG结尾
+                        withContext(Dispatchers.IO) {
+                            ImageIO.write(ImageIO.read(bytes.inputStream()), "jpeg", file)
+                        }
+                    } else {
+                        file.writeBytes(bytes)
+                    }
+                }else{
+                    file.writeBytes(bytes)
                 }
-                file.writeBytes(mcmodService.downloadFile(imgUrl).bytes())
-                file.readBytes().toExternalResource()
+                file.toExternalResource()
             }
         }
-        val uploadImage = try {
-            subject.uploadImage(imageExternalResource)
-        } catch (e: EOFException) {
-            val img = ImageIO.read(imageExternalResource.inputStream())
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(img, "jpg", byteArrayOutputStream)
-            subject.uploadImage(ByteArrayInputStream(byteArrayOutputStream.toByteArray()))
+        val image = subject.uploadImage(imageExternalResource)
+        withContext(Dispatchers.IO) {
+            imageExternalResource.close()
         }
-        imageExternalResource.close()
-        return uploadImage
+        return image
     }
-
 }
