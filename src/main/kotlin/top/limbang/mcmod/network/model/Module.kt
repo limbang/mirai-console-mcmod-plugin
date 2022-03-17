@@ -6,7 +6,7 @@ package top.limbang.mcmod.network.model
 data class Module(
     val iconUrl: String = "",
     val shortName: String = "",
-    val cnName: String = "",
-    val enName: String = "",
+    val mainName: String = "",
+    val secondaryName: String = "",
     val introduction: String = ""
 )

@@ -1,12 +1,8 @@
 package top.limbang.mcmod.network.service
 
 import okhttp3.ResponseBody
-import retrofit2.http.GET
-import retrofit2.http.Query
-import retrofit2.http.Url
-import top.limbang.mcmod.network.model.Item
-import top.limbang.mcmod.network.model.SearchFilter
-import top.limbang.mcmod.network.model.SearchResult
+import retrofit2.http.*
+import top.limbang.mcmod.network.model.*
 
 interface McmodService {
 
@@ -28,11 +24,40 @@ interface McmodService {
      * ### 获取物品
      */
     @GET
-    suspend fun getItem(@Url url:String) : Item
+    suspend fun getItem(@Url url: String): Item
+
+    /**
+     * ### 获取模组
+     */
+    @GET
+    suspend fun getModule(@Url url: String): Module
+
+    /**
+     * ### 获取整合包
+     */
+    @GET
+    suspend fun getModulePackage(@Url url: String): ModulePackage
+
+    /**
+     * ### 获取教程
+     */
+    @GET
+    suspend fun getCourse(@Url url: String): Course
+
+    /**
+     * ### 搜索服务器
+     */
+    @POST
+    suspend fun searchServer(@Url url: String = "https://play.mcmod.cn/frame/serverList/",@Body body:SearchServer): List<SearchResult>
+    /**
+     * ### 获取服务器
+     */
+    @GET
+    suspend fun getServer(@Url url: String): Server
 
     /**
      * ### 下载文件,一次性下载完,大文件会有卡顿
      */
     @GET
-    suspend fun downloadFile(@Url url:String): ResponseBody
+    suspend fun downloadFile(@Url url: String): ResponseBody
 }

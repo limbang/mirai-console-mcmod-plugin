@@ -7,7 +7,10 @@ import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.nextEvent
-import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import top.limbang.mcmod.mirai.McmodPlugin
@@ -16,8 +19,9 @@ import top.limbang.mcmod.mirai.utils.PagingStorage
 import top.limbang.mcmod.mirai.utils.toMessage
 import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
-import top.limbang.mcmod.network.model.SearchFilter.ITEM
+import top.limbang.mcmod.network.model.SearchFilter.*
 import top.limbang.mcmod.network.model.SearchResult
+import top.limbang.mcmod.network.model.SearchServer
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -32,7 +36,10 @@ object MiraiToMcmodService {
      */
     suspend fun MessageEvent.toMcmodSearch(key: String, filter: SearchFilter): Message {
         var pagingStoragePage = 1
-        runCatching { mcmodService.search(key, filter.ordinal, pagingStoragePage) }.onSuccess {
+        runCatching {
+            if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, pagingStoragePage))
+            else mcmodService.search(key, filter.ordinal, pagingStoragePage)
+        }.onSuccess {
             // 未搜索到内容回复
             if (it.isEmpty()) return PlainText("没有找到与“ $key ”有关的内容")
             // 判断搜索到的结果是否只有一条,是就直接返回具体内容
@@ -68,7 +75,10 @@ object MiraiToMcmodService {
                         }
                         // 获取下一页的数据,大小如果小于页面设置的默认值且有下一页就获取下请求
                         if (size < McmodPluginConfig.pageSize && isNextPage) {
-                            runCatching { mcmodService.search(key, filter.ordinal, page) }.onSuccess { nextList ->
+                            runCatching {
+                                if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, page))
+                                else mcmodService.search(key, filter.ordinal, page)
+                            }.onSuccess { nextList ->
                                 isNextPage = nextList.size == 30
                                 pagingStorage.addAll(nextList)
                                 page++
@@ -86,6 +96,8 @@ object MiraiToMcmodService {
                     }
                     // 判断是否选择了序号
                     nextMessage.toIntOrNull() != null -> {
+                        // 撤回发出的列表消息
+                        listMessage.recall()
                         if (nextMessage.toInt() > list.size) return PlainText("输入的序号过大")
                         if (nextMessage.toInt() < 0) return PlainText("输入的序号过小")
                         return parseSearchResult(filter, list[nextMessage.toInt()], this)
@@ -96,35 +108,12 @@ object MiraiToMcmodService {
                 listMessage.recall()
             } while (isContinue)
         }.onFailure {
+            println(it)
             return PlainText("请求失败：${it.message}")
         }
         return PlainText("请不要输入一些奇奇怪怪的东西")
     }
 
-    /**
-     * ### 把搜索的结果转换成 [ForwardMessage] 消息
-     * @param event 消息事件
-     * @param isFirst 是否是第一页
-     */
-    private fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean): ForwardMessage {
-        return with(event) {
-            buildForwardMessage {
-                bot says "30秒内回复编号查看"
-                for (i in this@toMessage.indices) {
-                    val title = this@toMessage[i].title
-                        .replace("\\([^()]*\\)".toRegex(), "")
-                        .replace("\\[[^\\[\\]]*\\]".toRegex(), "")
-                        .replace("\\s*-\\s*".toRegex(), "-")
-                    bot.id named i.toString() says title
-                }
-                when {
-                    this@toMessage.size < McmodPluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页"
-                    this@toMessage.size == McmodPluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页 [N]下一页"
-                    this@toMessage.size == McmodPluginConfig.pageSize && isFirst -> bot says "回复:[N]下一页"
-                }
-            }
-        }
-    }
 
     /**
      * ### 解析搜索的结果
@@ -137,14 +126,19 @@ object MiraiToMcmodService {
         searchResult: SearchResult,
         event: MessageEvent
     ): Message {
-        when (filter) {
-            ITEM -> {
-                runCatching { mcmodService.getItem(searchResult.url) }.onSuccess {
-                    return it.toMessage(event)
-                }.onFailure { return PlainText("请求失败：${it.message}") }
+        runCatching {
+            return when (filter) {
+                ITEM -> mcmodService.getItem(searchResult.url).toMessage(event)
+                MODULE -> mcmodService.getModule(searchResult.url).toMessage(event)
+                MODULE_PACKAGE -> mcmodService.getModulePackage(searchResult.url).toMessage(event)
+                COURSE -> mcmodService.getCourse(searchResult.url).toMessage(event)
+                SERVER -> mcmodService.getServer(searchResult.url).toMessage(event)
+                else -> TODO()
             }
+        }.onFailure {
+            return PlainText("请求失败：${it.message}")
         }
-        return PlainText("未实现")
+        return PlainText("未实现的分类查询!")
     }
 
     /**
@@ -161,8 +155,6 @@ object MiraiToMcmodService {
                 url.startsWith('/') -> "https://www.mcmod.cn$url" // 处理单斜杠开头情况"/xxx/xxx"
                 else -> url
             }
-            println(imgUrl.toHttpUrl().encodedPath)
-            println(imgUrl.toHttpUrl())
 
             val file = McmodPlugin.resolveDataFile("img/${imgUrl.toHttpUrl().encodedPath}")
             if (file.exists()) { // 判断本地是否已经存储
@@ -180,12 +172,12 @@ object MiraiToMcmodService {
                 if (type?.subtype == "jpeg") {
                     if (bytes[bytes.lastIndex].toUByte() != 0xD9.toUByte()) { //意外的JPG结尾
                         withContext(Dispatchers.IO) {
-                            ImageIO.write(ImageIO.read(bytes.inputStream()), "jpeg", file)
+                            ImageIO.write(ImageIO.read(bytes.inputStream()), "png", file) // 都转成 png 格式
                         }
                     } else {
                         file.writeBytes(bytes)
                     }
-                }else{
+                } else {
                     file.writeBytes(bytes)
                 }
                 file.toExternalResource()

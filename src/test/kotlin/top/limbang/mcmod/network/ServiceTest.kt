@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.Test
 import top.limbang.mcmod.network.model.DownloadStatus
+import top.limbang.mcmod.network.model.SearchServer
 import top.limbang.mcmod.network.utils.startDownload
 import java.io.File
 import javax.imageio.ImageIO
@@ -24,9 +25,64 @@ internal class ServiceTest {
     }
 
     @Test
+    fun searchServer(){
+        runBlocking {
+            runCatching { service.searchServer(body = SearchServer("遗落之地")) }.onSuccess {
+                println("成功:$it 大小：${it.size}")
+            }.onFailure {
+                println("失败:$it")
+            }
+        }
+    }
+
+    @Test
     fun getItem() {
         runBlocking {
             runCatching { service.getItem("https://www.mcmod.cn/item/7386.html") }.onSuccess {
+                println("成功:$it")
+            }.onFailure {
+                println("失败:$it")
+            }
+        }
+    }
+
+    @Test
+    fun getModule() {
+        runBlocking {
+            runCatching { service.getModule("https://www.mcmod.cn/class/353.html") }.onSuccess {
+                println("成功:$it")
+            }.onFailure {
+                println("失败:$it")
+            }
+        }
+    }
+
+    @Test
+    fun getCourse() {
+        runBlocking {
+            runCatching { service.getCourse("https://www.mcmod.cn/post/273.html") }.onSuccess {
+                println("成功:$it")
+            }.onFailure {
+                println("失败:$it")
+            }
+        }
+    }
+
+    @Test
+    fun getModulePackage() {
+        runBlocking {
+            runCatching { service.getModulePackage("https://www.mcmod.cn/modpack/2.html") }.onSuccess {
+                println("成功:$it")
+            }.onFailure {
+                println("失败:$it")
+            }
+        }
+    }
+
+    @Test
+    fun getServer() {
+        runBlocking {
+            runCatching { service.getServer("https://play.mcmod.cn/sv20184730.html")}.onSuccess {
                 println("成功:$it")
             }.onFailure {
                 println("失败:$it")
