@@ -80,8 +80,7 @@ suspend fun Server.toMessage(event: MessageEvent) = with(event) {
     buildForwardMessage {
         if (iconUrl.isNotEmpty())
             runCatching { readImage(iconUrl) }.onSuccess { bot says it }.onFailure { bot says (it.localizedMessage) }
-        bot says name
-        bot says "发布人:${publisher}\n类型:${type}\nQQ群:${qqGroup}\n评分:${score}"
+        bot says "名称:$name\n发布人:$publisher\nMC版本:$version\n在线玩家:$onlineUsers\n类型:$type\nQQ群:$qqGroup\n官网:$officialWebsite\n评分:$score"
         bot says introductionToMessage(introduction)
     }
 }

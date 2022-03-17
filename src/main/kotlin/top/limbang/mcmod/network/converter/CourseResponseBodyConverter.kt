@@ -12,8 +12,9 @@ import top.limbang.mcmod.network.utils.parse
 class CourseResponseBodyConverter : Converter<ResponseBody, Course> {
     override fun convert(value: ResponseBody): Course {
         val document = value.parse()
-        val name = document.select(".name").text()
-        val introduction = document.select("[class=post-content common-text font14]").labelReplacement()
-        return Course(name, introduction)
+        return Course(
+            name = document.select(".name").text(),
+            introduction = document.select("[class=post-content common-text font14]").labelReplacement()
+        )
     }
 }

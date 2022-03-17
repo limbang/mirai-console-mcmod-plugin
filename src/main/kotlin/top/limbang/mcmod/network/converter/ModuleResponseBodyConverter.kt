@@ -12,12 +12,13 @@ import top.limbang.mcmod.network.utils.parse
 class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
     override fun convert(value: ResponseBody): Module {
         val document = value.parse()
-        val iconUrl = document.select(".class-cover-image > img").attr("src")
-        val shortName = document.select(".short-name").text()
-        val mainName = document.select(".class-title > h3").text()
-        val secondaryName = document.select(".class-title > h4").text()
-        val introduction = document.select("[class=text-area common-text font14]").labelReplacement()
-        return Module(iconUrl, shortName, mainName, secondaryName, introduction)
+        return Module(
+            iconUrl = document.select(".class-cover-image > img").attr("src"),
+            shortName = document.select(".short-name").text(),
+            mainName = document.select(".class-title > h3").text(),
+            secondaryName = document.select(".class-title > h4").text(),
+            introduction = document.select("[class=text-area common-text font14]").labelReplacement()
+        )
     }
 }
 
