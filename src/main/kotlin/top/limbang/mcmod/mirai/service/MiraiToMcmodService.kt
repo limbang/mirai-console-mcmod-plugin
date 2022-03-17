@@ -13,6 +13,7 @@ import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okio.IOException
 import top.limbang.mcmod.mirai.McmodPlugin
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.utils.PagingStorage
@@ -172,7 +173,8 @@ object MiraiToMcmodService {
                 if (type?.subtype == "jpeg") {
                     if (bytes[bytes.lastIndex].toUByte() != 0xD9.toUByte()) { //意外的JPG结尾
                         withContext(Dispatchers.IO) {
-                            ImageIO.write(ImageIO.read(bytes.inputStream()), "png", file) // 都转成 png 格式
+                            val bufferedImage = ImageIO.read(bytes.inputStream()) ?: throw IOException("不支持的格式")
+                            ImageIO.write(bufferedImage, "png", file) // 都转成 png 格式
                         }
                     } else {
                         file.writeBytes(bytes)

@@ -105,7 +105,6 @@ private const val IMG_FEATURE = "<img data-src=\""
  * ### 把 introduction 转成消息链
  */
 private suspend fun MessageEvent.introductionToMessage(introduction: String) = buildMessageChain {
-    println(introduction)
     if (introduction.length < 4500) {
         var newIntroduction = introduction.trim()
         while (true) {
@@ -118,7 +117,7 @@ private suspend fun MessageEvent.introductionToMessage(introduction: String) = b
                 runCatching { readImage(outStr.substring(IMG_FEATURE.length, outStr.indexOf("\">"))) }.onSuccess {
                     +it
                     +"\n"
-                }.onFailure { +it.localizedMessage }
+                }.onFailure { +"图片:[${it.localizedMessage}]\n" }
             } else {
                 +"$outStr\n"
             }
