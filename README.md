@@ -7,33 +7,47 @@
 ```shell
 # 修改搜索标签的命令
 /mcmod setQueryCommand <type> <command>
-/mcmod 查询命令 <type> <command> 
-# 是否启用戳一戳回复功能 true:启用 false:禁用
-/mcmod setNudgeEnabled <enabled>
 ```
 
 type有如下类型
- - [ALL] 全部
- - [MODULE] 模组
- - [INTEGRATION_PACKAGE] 整合包
- - [DATA] 资料
- - [COURSE_OF_STUDY] 教程
- - [AUTHOR] 作者
- - [USER] 用户
- - [COMMUNITY] 社群
- - [SERVER] 服务器
 
-现只支持 `MODULE` `DATA` `COURSE_OF_STUDY` `INTEGRATION_PACKAGE` `SERVER`
+- [ALL] 全部
+- [MODULE] 模组
+- [MODULE_PACKAGE] 整合包
+- [ITEM] 物品
+- [COURSE] 教程
+- [AUTHOR] 作者
+- [USER] 用户
+- [COMMUNITY] 社群
+- [SERVER] 服务器
+
+现只支持 `MODULE` `ITEM` `COURSE` `MODULE_PACKAGE` `SERVER`
 
 默认命令：
 
-MODULE = 百科模组
+```shell
+MODULE = ssm
+ITEM = ssi
+COURSE = ssc
+MODULE_PACKAGE = ssp
+SERVER = sss
+```
 
-DATA = 百科资料
+其他配置直接更改配置文件:
 
-COURSE_OF_STUDY = 百科教程
+路径:`config/top.limbang.mirai-console-mcmod-plugin/mcmod.yml`
 
-INTEGRATION_PACKAGE = 百科整合包
-
-SERVER = 百科服务器
-
+```yaml
+# 是否启用戳一戳回复功能 true:启用 false:禁用
+isNudgeEnabled: true
+# 是否启用群消息回复功能,默认回复群消息 true:启用 false:禁用
+isGroupMessagesEnabled: true
+# 是否启用好友消息回复功能,默认回复群消息 true:启用 false:禁用
+isFriendMessagesEnabled: false
+# 是否启用临时消息回复功能,默认回复群消息 true:启用 false:禁用
+isTempMessagesEnabled: false
+# 是否启用陌生人消息回复功能,默认回复群消息 true:启用 false:禁用
+isStrangerMessagesEnabled: false
+# 每页显示多少条目,默认为 6
+pageSize: 6
+```
