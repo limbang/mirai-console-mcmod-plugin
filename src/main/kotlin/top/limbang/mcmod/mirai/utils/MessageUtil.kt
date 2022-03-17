@@ -7,6 +7,7 @@ import net.mamoe.mirai.message.data.buildMessageChain
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.service.MiraiToMcmodService.readImage
 import top.limbang.mcmod.network.model.*
+import top.limbang.mcmod.network.utils.substringBetween
 
 
 /**
@@ -54,10 +55,10 @@ suspend fun ModulePackage.toMessage(event: MessageEvent) = with(event) {
     buildForwardMessage {
         if (iconUrl.isNotEmpty())
             runCatching { readImage(iconUrl) }.onSuccess { bot says it }.onFailure { bot says (it.localizedMessage) }
-        var name = ""
-        if (shortName.isNotEmpty()) name += "缩写:${shortName}\n"
-        if (name.isNotEmpty()) name += "全称:${name}\n"
-        bot says name
+        var outName = ""
+        if (shortName.isNotEmpty()) outName += "缩写:${shortName}\n"
+        if (name.isNotEmpty()) outName += "全称:${name}"
+        bot says outName
         bot says introductionToMessage(introduction)
     }
 }
@@ -99,7 +100,8 @@ suspend fun Item.toMessage(event: MessageEvent) = with(event) {
 }
 
 /** 图片特征 */
-private const val IMG_FEATURE = "<img data-src=\""
+private const val IMG_FEATURE_START = "<img data-src=\""
+private const val IMG_FEATURE_END = "\">"
 
 /**
  * ### 把 introduction 转成消息链
@@ -107,22 +109,17 @@ private const val IMG_FEATURE = "<img data-src=\""
 private suspend fun MessageEvent.introductionToMessage(introduction: String) = buildMessageChain {
     if (introduction.length < 4500) {
         var newIntroduction = introduction.trim()
-        while (true) {
-            val outStr = newIntroduction.substringBefore("\n", "end")
-            if (outStr == "end") {
-                +newIntroduction
-                break
-            }
-            if (outStr.indexOf(IMG_FEATURE) != -1) { // 判断是否是图片
-                runCatching { readImage(outStr.substring(IMG_FEATURE.length, outStr.indexOf("\">"))) }.onSuccess {
-                    +it
-                    +"\n"
-                }.onFailure { +"图片:[${it.localizedMessage}]\n" }
-            } else {
-                +"$outStr\n"
-            }
-            newIntroduction = newIntroduction.substring(outStr.length).trim()
+        var start: Int
+        while (newIntroduction.indexOf(IMG_FEATURE_START).also { start = it } != -1) { // 判断是否是图片
+            if (start != 0) +"${newIntroduction.substring(0, start).trim()}\n"
+            val url = newIntroduction.substringBetween(IMG_FEATURE_START, IMG_FEATURE_END)
+            runCatching { readImage(url) }.onSuccess {
+                +it.plus("\n")
+            }.onFailure { +"图片:[${it.localizedMessage}]\n" }
+            start += url.length + IMG_FEATURE_START.length + IMG_FEATURE_END.length
+            newIntroduction = newIntroduction.substring(start).trim()
         }
+        if (newIntroduction.isNotEmpty()) +newIntroduction
     } else {
         +"介绍内容过长，请通过访问原文链接查看完整内容！"
     }
