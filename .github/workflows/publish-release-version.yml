@@ -1,0 +1,42 @@
+name: Publish release version
+
+on:
+  # 触发条件
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  # 任务名称
+  build:
+    name: Publish mirai plugin
+    # 运行环境
+    runs-on: ubuntu-latest
+    # 步骤
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      # 设置JDK 版本
+      - name: Setup JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      # 获取标签的版本设置到 output
+      - name: Set output
+        id: vars
+        run: echo ::set-output name=version::$(echo ${GITHUB_REF:11})
+      # 设置权限
+      - name: Setup gradlew permission
+        run: chmod +x gradlew
+        # 编译插件
+      - name: Build mirai plugin
+        run: ./gradlew buildPlugin
+      # 将文件上传到 GitHub release
+      - name: Upload jar to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/mirai/mirai-console-mcmod-plugin-${{ steps.vars.outputs.version }}.mirai.jar
+          tag: ${{ github.ref }}
+
