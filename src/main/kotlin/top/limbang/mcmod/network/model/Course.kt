@@ -11,5 +11,7 @@ package top.limbang.mcmod.network.model
 
 /**
  * ### 教程实体
+ * @param name 名称
+ * @param introduction 内容
  */
-data class Course(val name: String = "", val introduction: String = "")
+data class Course(val name: String, val introduction: String)

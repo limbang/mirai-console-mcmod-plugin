@@ -11,10 +11,14 @@ package top.limbang.mcmod.network.model
 
 /**
  * ### 整合包实体
+ * @param iconUrl 整合包图片
+ * @param shortName 整合包缩写
+ * @param name 整合包名称
+ * @param introduction 整合包介绍
  */
 data class ModulePackage(
-    val iconUrl: String = "",
-    val shortName: String = "",
-    val name: String = "",
-    val introduction: String = ""
+    val iconUrl: String,
+    val shortName: String,
+    val name: String,
+    val introduction: String
 )

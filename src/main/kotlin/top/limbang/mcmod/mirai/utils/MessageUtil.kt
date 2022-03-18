@@ -53,6 +53,13 @@ suspend fun Module.toMessage(event: MessageEvent) = with(event) {
         if (mainName.isNotEmpty()) name += "主要名称:${mainName}\n"
         if (secondaryName.isNotEmpty()) name += "次要名称:${secondaryName}"
         bot says name
+        bot says buildMessageChain {
+            +"作者/开发团队:\n"
+            entity.forEach { entity ->
+                runCatching { readImage(entity.avatarUrl) }.onSuccess { +it }.onFailure { +it.localizedMessage }
+                +"${entity.name}:${entity.relation}\n"
+            }
+        }
         bot says introductionToMessage(introduction)
     }
 }

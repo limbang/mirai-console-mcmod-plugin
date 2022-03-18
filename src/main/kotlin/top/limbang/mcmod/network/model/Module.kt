@@ -11,11 +11,26 @@ package top.limbang.mcmod.network.model
 
 /**
  * ### 模组实体
+ * @param iconUrl 模组图片
+ * @param shortName 模组缩写
+ * @param mainName 模组主要名称
+ * @param secondaryName 模组次要名称
+ * @param entity 作者或开发团队
+ * @param introduction 模组介绍
  */
 data class Module(
-    val iconUrl: String = "",
-    val shortName: String = "",
-    val mainName: String = "",
-    val secondaryName: String = "",
-    val introduction: String = ""
-)
+    val iconUrl: String,
+    val shortName: String,
+    val mainName: String,
+    val secondaryName: String,
+    val entity: List<Entity>,
+    val introduction: String
+) {
+    /**
+     * ### 作者或开发团队
+     * @param avatarUrl 头像 url
+     * @param name 名称
+     * @param relation 和模组的关系
+     */
+    data class Entity(val avatarUrl: String, val name: String, val relation: String)
+}
