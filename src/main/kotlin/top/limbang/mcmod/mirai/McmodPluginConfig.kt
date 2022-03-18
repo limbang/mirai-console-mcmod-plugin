@@ -24,13 +24,13 @@ object McmodPluginConfig : AutoSavePluginConfig("mcmod"){
     @ValueDescription("是否启用群消息回复功能,默认回复群消息 true:启用 false:禁用")
     val isGroupMessagesEnabled: Boolean by value(true)
 
-    @ValueDescription("是否启用好友消息回复功能,默认回复群消息 true:启用 false:禁用")
+    @ValueDescription("是否启用好友消息回复功能,默认禁用好友消息 true:启用 false:禁用")
     val isFriendMessagesEnabled: Boolean by value(false)
 
-    @ValueDescription("是否启用临时消息回复功能,默认回复群消息 true:启用 false:禁用")
+    @ValueDescription("是否启用临时消息回复功能,默认禁用临时消息 true:启用 false:禁用")
     val isTempMessagesEnabled: Boolean by value(false)
 
-    @ValueDescription("是否启用陌生人消息回复功能,默认回复群消息 true:启用 false:禁用")
+    @ValueDescription("是否启用陌生人消息回复功能,默认禁用陌生人消息 true:启用 false:禁用")
     val isStrangerMessagesEnabled: Boolean by value(false)
 
     @ValueDescription("每页显示多少条目,默认为 6")
