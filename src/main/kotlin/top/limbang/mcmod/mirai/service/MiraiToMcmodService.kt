@@ -27,6 +27,7 @@ import top.limbang.mcmod.mirai.McmodPlugin
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.utils.PagingStorage
 import top.limbang.mcmod.mirai.utils.toMessage
+import top.limbang.mcmod.mirai.utils.zoomBySize
 import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchFilter.*
@@ -153,8 +154,10 @@ object MiraiToMcmodService {
 
     /**
      * ### 读取图片
+     * @param url
+     * @param isZoomBySize 是否缩放图片
      */
-    suspend fun MessageEvent.readImage(url: String): Image {
+    suspend fun MessageEvent.readImage(url: String, isZoomBySize: Boolean = false): Image {
         val base64Prefix = "data:image/png;base64,"
         val imageExternalResource = if (url.startsWith(base64Prefix)) { // 处理base64情况
             Base64.getDecoder().decode(url.substring(base64Prefix.length)).toExternalResource()
@@ -168,6 +171,7 @@ object MiraiToMcmodService {
 
             val file = McmodPlugin.resolveDataFile("img/${imgUrl.toHttpUrl().encodedPath}")
             if (file.exists()) { // 判断本地是否已经存储
+                if (isZoomBySize) file.zoomBySize(45)
                 file.readBytes().toExternalResource()
             } else {
                 // 判断文件夹是否存在,不存在就创建
@@ -191,6 +195,7 @@ object MiraiToMcmodService {
                 } else {
                     file.writeBytes(bytes)
                 }
+                if (isZoomBySize) file.zoomBySize(45)
                 file.toExternalResource()
             }
         }

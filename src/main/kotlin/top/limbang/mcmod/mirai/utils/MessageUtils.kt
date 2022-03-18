@@ -56,7 +56,7 @@ suspend fun Module.toMessage(event: MessageEvent) = with(event) {
         bot says buildMessageChain {
             +"作者/开发团队:\n"
             entity.forEach { entity ->
-                runCatching { readImage(entity.avatarUrl) }.onSuccess { +it }.onFailure { +it.localizedMessage }
+                runCatching { readImage(entity.avatarUrl, true) }.onSuccess { +it }.onFailure { +it.localizedMessage }
                 +"${entity.name}:${entity.relation}\n"
             }
         }
