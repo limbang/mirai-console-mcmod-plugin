@@ -1,13 +1,15 @@
 package top.limbang.mcmod.mirai
 
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
-import net.mamoe.mirai.console.extension.PluginComponentStorage
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.event.*
 import net.mamoe.mirai.event.events.NudgeEvent
-import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.event.globalEventChannel
+import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
+import net.mamoe.mirai.message.data.MessageSourceKind
+import net.mamoe.mirai.message.data.kind
+import net.mamoe.mirai.message.data.source
 import top.limbang.mcmod.mirai.McmodPluginData.queryCommand
 import top.limbang.mcmod.mirai.service.MiraiToMcmodService.toMcmodSearch
 import top.limbang.mcmod.network.model.SearchFilter
@@ -16,27 +18,24 @@ import top.limbang.mcmod.network.model.SearchFilter
 object McmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "2.0.0",
+        version = "2.0.1",
     ) {
         author("limbang")
         info("""mc百科查询""")
     }
 ) {
 
-    override fun PluginComponentStorage.onLoad() {
-        // 添加默认查询命令
-        if (queryCommand[SearchFilter.MODULE] == null) queryCommand[SearchFilter.MODULE] = "ssm"
-        if (queryCommand[SearchFilter.ITEM] == null) queryCommand[SearchFilter.ITEM] = "ssi"
-        if (queryCommand[SearchFilter.COURSE] == null) queryCommand[SearchFilter.COURSE] = "ssc"
-        if (queryCommand[SearchFilter.MODULE_PACKAGE] == null) queryCommand[SearchFilter.MODULE_PACKAGE] = "ssp"
-        if (queryCommand[SearchFilter.SERVER] == null) queryCommand[SearchFilter.SERVER] = "sss"
-        McmodPluginData.save()
-    }
-
     override fun onEnable() {
         McmodPluginData.reload()
         McmodPluginConfig.reload()
         McmodPluginCompositeCommand.register()
+
+        // 添加默认查询命令
+        if (queryCommand[SearchFilter.MODULE] == null) queryCommand[SearchFilter.MODULE] = "ssm"
+        if (queryCommand[SearchFilter.MODULE_PACKAGE] == null) queryCommand[SearchFilter.MODULE_PACKAGE] = "ssp"
+        if (queryCommand[SearchFilter.ITEM] == null) queryCommand[SearchFilter.ITEM] = "ssi"
+        if (queryCommand[SearchFilter.COURSE] == null) queryCommand[SearchFilter.COURSE] = "ssc"
+        if (queryCommand[SearchFilter.SERVER] == null) queryCommand[SearchFilter.SERVER] = "sss"
 
         // 订阅所有来着 Bot 的消息
         globalEventChannel().subscribeMessages {
