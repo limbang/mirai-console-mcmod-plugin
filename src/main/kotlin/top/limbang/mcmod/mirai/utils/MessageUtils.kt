@@ -10,10 +10,9 @@
 package top.limbang.mcmod.mirai.utils
 
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.message.data.ForwardMessage
-import net.mamoe.mirai.message.data.buildForwardMessage
-import net.mamoe.mirai.message.data.buildMessageChain
+import net.mamoe.mirai.message.data.*
 import top.limbang.mcmod.mirai.McmodPluginConfig
+import top.limbang.mcmod.mirai.McmodPluginConfig.isShowOriginalUrlEnabled
 import top.limbang.mcmod.mirai.service.MiraiToMcmodService.readImage
 import top.limbang.mcmod.network.model.*
 import top.limbang.mcmod.network.utils.substringBetween
@@ -44,10 +43,9 @@ fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean) = with(e
 /**
  * ### 将模组转成消息
  */
-suspend fun Module.toMessage(event: MessageEvent) = with(event) {
+suspend fun Module.toMessage(event: MessageEvent, originalUrl: String) = with(event) {
     buildForwardMessage {
-        if (iconUrl.isNotEmpty())
-            runCatching { readImage(iconUrl) }.onSuccess { bot says it }.onFailure { bot says (it.localizedMessage) }
+        if (iconUrl.isNotEmpty()) bot says imgUrlToMessage(iconUrl)
         var name = ""
         if (shortName.isNotEmpty()) name += "缩写:${shortName}\n"
         if (mainName.isNotEmpty()) name += "主要名称:${mainName}\n"
@@ -61,57 +59,67 @@ suspend fun Module.toMessage(event: MessageEvent) = with(event) {
             }
         }
         bot says introductionToMessage(introduction)
+        if (isShowOriginalUrlEnabled) bot says "原文链接:$originalUrl"
     }
 }
 
 /**
  * ### 将整合包转成消息
  */
-suspend fun ModulePackage.toMessage(event: MessageEvent) = with(event) {
+suspend fun ModulePackage.toMessage(event: MessageEvent, originalUrl: String) = with(event) {
     buildForwardMessage {
-        if (iconUrl.isNotEmpty())
-            runCatching { readImage(iconUrl) }.onSuccess { bot says it }.onFailure { bot says (it.localizedMessage) }
+        if (iconUrl.isNotEmpty()) bot says imgUrlToMessage(iconUrl)
         var outName = ""
         if (shortName.isNotEmpty()) outName += "缩写:${shortName}\n"
         if (name.isNotEmpty()) outName += "全称:${name}"
         bot says outName
         bot says introductionToMessage(introduction)
+        if (isShowOriginalUrlEnabled) bot says "原文链接:$originalUrl"
     }
 }
 
 /**
  * ### 将教程转成消息
  */
-suspend fun Course.toMessage(event: MessageEvent) = with(event) {
+suspend fun Course.toMessage(event: MessageEvent, originalUrl: String) = with(event) {
     buildForwardMessage {
         bot says name
         bot says introductionToMessage(introduction)
+        if (isShowOriginalUrlEnabled) bot says "原文链接:$originalUrl"
     }
 }
 
 /**
  * ### 将服务器转成消息
  */
-suspend fun Server.toMessage(event: MessageEvent) = with(event) {
+suspend fun Server.toMessage(event: MessageEvent, originalUrl: String) = with(event) {
     buildForwardMessage {
-        if (iconUrl.isNotEmpty())
-            runCatching { readImage(iconUrl) }.onSuccess { bot says it }.onFailure { bot says (it.localizedMessage) }
+        if (iconUrl.isNotEmpty()) bot says imgUrlToMessage(iconUrl)
         bot says "名称:$name\n发布人:$publisher\nMC版本:$version\n在线玩家:$onlineUsers\n类型:$type\nQQ群:$qqGroup\n官网:$officialWebsite\n评分:$score"
         bot says introductionToMessage(introduction)
+        if (isShowOriginalUrlEnabled) bot says "原文链接:$originalUrl"
     }
 }
 
 /**
  * ### 将物品转成消息
  */
-suspend fun Item.toMessage(event: MessageEvent) = with(event) {
+suspend fun Item.toMessage(event: MessageEvent, originalUrl: String) = with(event) {
     buildForwardMessage {
-        if (iconUrl.isNotEmpty())
-            runCatching { readImage(iconUrl) }.onSuccess { bot says it }.onFailure { bot says (it.localizedMessage) }
+        if (iconUrl.isNotEmpty()) bot says imgUrlToMessage(iconUrl)
         bot says name
         bot says introductionToMessage(introduction)
         bot says "合成表:$tabUrl"
+        if (isShowOriginalUrlEnabled) bot says "原文链接:$originalUrl"
     }
+}
+
+/**
+ * ### 图片url转成消息
+ */
+suspend fun MessageEvent.imgUrlToMessage(url: String): Message {
+    runCatching { readImage(url) }.onSuccess { return it }.onFailure { return PlainText(it.localizedMessage) }
+    return PlainText("未知错误")
 }
 
 /** 图片特征 */

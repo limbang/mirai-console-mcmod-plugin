@@ -48,6 +48,8 @@ isFriendMessagesEnabled: false
 isTempMessagesEnabled: false
 # 是否启用陌生人消息回复功能,默认回复群消息 true:启用 false:禁用
 isStrangerMessagesEnabled: false
+# 是否启动显示原Url功能,默认不启用 true:启用 false:禁用
+isShowOriginalUrlEnabled: false
 # 每页显示多少条目,默认为 6
 pageSize: 6
 ```

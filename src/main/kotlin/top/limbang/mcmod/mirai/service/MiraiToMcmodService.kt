@@ -139,11 +139,11 @@ object MiraiToMcmodService {
     ): Message {
         runCatching {
             return when (filter) {
-                ITEM -> mcmodService.getItem(searchResult.url).toMessage(event)
-                MODULE -> mcmodService.getModule(searchResult.url).toMessage(event)
-                MODULE_PACKAGE -> mcmodService.getModulePackage(searchResult.url).toMessage(event)
-                COURSE -> mcmodService.getCourse(searchResult.url).toMessage(event)
-                SERVER -> mcmodService.getServer(searchResult.url).toMessage(event)
+                ITEM -> mcmodService.getItem(searchResult.url).toMessage(event, searchResult.url)
+                MODULE -> mcmodService.getModule(searchResult.url).toMessage(event, searchResult.url)
+                MODULE_PACKAGE -> mcmodService.getModulePackage(searchResult.url).toMessage(event, searchResult.url)
+                COURSE -> mcmodService.getCourse(searchResult.url).toMessage(event, searchResult.url)
+                SERVER -> mcmodService.getServer(searchResult.url).toMessage(event, searchResult.url)
                 else -> TODO()
             }
         }.onFailure {
