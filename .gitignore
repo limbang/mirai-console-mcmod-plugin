@@ -1,8 +1,19 @@
-/.idea/
-/.gradle/
-/bots/
-/build/
-/config/
-/data/
-/plugins/
+# mirai
+bots/
+config/
+data/
+plugins/
 local.properties
+
+# Gradle
+.gradle
+**/build/
+!src/**/build/
+
+# Idea
+.idea/*.xml
+*.iml
+!.idea/copyright/
+
+# mac os
+.DS_Store

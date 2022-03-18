@@ -1,0 +1,7 @@
+<component name="CopyrightManager">
+  <settings default="mirai-console-mcmod-plugin">
+    <module2copyright>
+      <element module="All" copyright="mirai-console-mcmod-plugin" />
+    </module2copyright>
+  </settings>
+</component>
