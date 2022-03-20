@@ -36,6 +36,9 @@ object McmodPluginConfig : AutoSavePluginConfig("mcmod"){
     @ValueDescription("是否启用显示原Url功能,默认不启用 true:启用 false:禁用")
     val isShowOriginalUrlEnabled: Boolean by value(false)
 
+    @ValueDescription("是否启用多次选择功能可以多次选择搜索的结果,默认不启用 true:启用 false:禁用")
+    val isMultipleSelectEnabled: Boolean by value(false)
+
     @ValueDescription("每页显示多少条目,默认为 6")
     val pageSize: Int by value(6)
 }

@@ -25,6 +25,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okio.IOException
 import top.limbang.mcmod.mirai.McmodPlugin
 import top.limbang.mcmod.mirai.McmodPluginConfig
+import top.limbang.mcmod.mirai.McmodPluginConfig.isMultipleSelectEnabled
 import top.limbang.mcmod.mirai.utils.PagingStorage
 import top.limbang.mcmod.mirai.utils.toMessage
 import top.limbang.mcmod.mirai.utils.zoomBySize
@@ -72,7 +73,7 @@ object MiraiToMcmodService {
                 // 获取下一条消息事件
                 nextEvent = withTimeoutOrNull(30000) {
                     GlobalEventChannel.nextEvent(EventPriority.MONITOR) { next -> next.sender == sender }
-                } ?: return PlainText("等待超时,请重新查询")
+                } ?: return PlainText("等待超时,请重新查询").also { listMessage.recall() }
                 // 翻页控制
                 val nextMessage = nextEvent.message.content
                 val isContinue = when {
@@ -107,11 +108,12 @@ object MiraiToMcmodService {
                     }
                     // 判断是否选择了序号
                     nextMessage.toIntOrNull() != null -> {
-                        // 撤回发出的列表消息
-                        listMessage.recall()
-                        if (nextMessage.toInt() > list.size) return PlainText("输入的序号过大")
-                        if (nextMessage.toInt() < 0) return PlainText("输入的序号过小")
-                        return parseSearchResult(filter, list[nextMessage.toInt()], this)
+                        if (nextMessage.toInt() > list.size) return PlainText("输入的序号过大").also { listMessage.recall() }
+                        if (nextMessage.toInt() < 0) return PlainText("输入的序号过小").also { listMessage.recall() }
+                        val message = parseSearchResult(filter, list[nextMessage.toInt()], this)
+                        if (!isMultipleSelectEnabled) return message.also { listMessage.recall() }
+                        subject.sendMessage(message)
+                        true
                     }
                     else -> false
                 }
@@ -119,7 +121,6 @@ object MiraiToMcmodService {
                 listMessage.recall()
             } while (isContinue)
         }.onFailure {
-            println(it)
             return PlainText("请求失败：${it.message}")
         }
         return PlainText("请不要输入一些奇奇怪怪的东西")

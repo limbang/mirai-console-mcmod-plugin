@@ -27,7 +27,7 @@ import top.limbang.mcmod.network.model.SearchFilter
 object McmodPlugin : KotlinPlugin(
     JvmPluginDescription(
         id = "top.limbang.mirai-console-mcmod-plugin",
-        version = "2.0.3",
+        version = "2.0.4",
     ) {
         author("limbang")
         info("""mc百科查询""")

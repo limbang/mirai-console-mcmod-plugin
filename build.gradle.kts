@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "top.limbang"
-version = "2.0.3"
+version = "2.0.4"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
