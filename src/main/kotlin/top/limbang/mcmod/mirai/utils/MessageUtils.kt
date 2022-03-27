@@ -59,7 +59,8 @@ suspend fun Module.toMessage(event: MessageEvent, originalUrl: String) = with(ev
             }
         }
         bot says introductionToMessage(introduction)
-        if (isShowOriginalUrlEnabled) bot says "原文链接:$originalUrl"
+        if (isShowOriginalUrlEnabled)
+            bot says ("原文链接: $originalUrl\n" + commonLinks.joinToString("\n"))
     }
 }
 

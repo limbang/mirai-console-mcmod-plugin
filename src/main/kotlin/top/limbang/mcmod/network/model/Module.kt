@@ -24,7 +24,8 @@ data class Module(
     val mainName: String,
     val secondaryName: String,
     val entity: List<Entity>,
-    val introduction: String
+    val introduction: String,
+    val commonLinks: List<String> = emptyList()
 ) {
     /**
      * ### 作者或开发团队
