@@ -13,6 +13,7 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.*
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.McmodPluginConfig.isShowOriginalUrlEnabled
+import top.limbang.mcmod.mirai.McmodPluginConfig.isShowRelatedLinksEnabled
 import top.limbang.mcmod.mirai.service.MiraiToMcmodService.readImage
 import top.limbang.mcmod.network.model.*
 import top.limbang.mcmod.network.utils.substringBetween
@@ -58,9 +59,9 @@ suspend fun Module.toMessage(event: MessageEvent, originalUrl: String) = with(ev
                 +"${entity.name}:${entity.relation}\n"
             }
         }
+        if (isShowOriginalUrlEnabled) bot says ("原文链接: $originalUrl")
+        if (isShowRelatedLinksEnabled) bot says ("相关链接:\n${relatedLinks.joinToString("\n")}")
         bot says introductionToMessage(introduction)
-        if (isShowOriginalUrlEnabled)
-            bot says ("原文链接: $originalUrl\n" + commonLinks.joinToString("\n"))
     }
 }
 

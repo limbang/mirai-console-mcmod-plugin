@@ -11,7 +11,6 @@ package top.limbang.mcmod.network.converter
 
 import okhttp3.ResponseBody
 import retrofit2.Converter
-import top.limbang.mcmod.mirai.McmodPluginConfig.isShowOriginalUrlEnabled
 import top.limbang.mcmod.network.model.Module
 import top.limbang.mcmod.network.utils.labelReplacement
 import top.limbang.mcmod.network.utils.parse
@@ -28,7 +27,6 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
         val names = document.select(".frame > ul > li > .member > .name > a")
         val relations = document.select(".frame > ul > li > .member > .position")
         val entity = mutableListOf<Module.Entity>()
-        val commonLinks = mutableListOf<String>()
         for (i in 0 until avatarUrls.size) {
             entity.add(
                 Module.Entity(
@@ -38,26 +36,20 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
                 )
             )
         }
-        // 相关链接
-        // <div class="common-link-frame...
-        //   <div class="list"...
-        //     <ul> <li>
-        //       <a data-original-title="...
-        //       <script>...<strong>http...
-        //     </li> ...
-        if (isShowOriginalUrlEnabled) {
-            document.select(".common-link-frame > .list > ul > li")
-                .filter { it.childrenSize() > 1 }
-                .forEach { li ->
-                    // 从脚本中截取 url
-                    val url = li.child(1).html().substringBetween("<strong>", "</strong>")
-                    if (url.isNotEmpty()) {
-                        // 从 a 标签中读取标题
-                        val title = li.child(0).attr("data-original-title")
-                        commonLinks.add("$title: $url")
-                    }
+        // 解析相关链接
+        val relatedLinks = mutableListOf<String>()
+        document.select(".common-link-frame > .list > ul > li")
+            .filter { it.childrenSize() > 1 }
+            .forEach { li ->
+                // 从脚本中截取 url
+                val url = li.child(1).html().substringBetween("<strong>", "</strong>")
+                if (url.isNotEmpty()) {
+                    // 从 a 标签中读取标题
+                    val title = li.child(0).attr("data-original-title")
+                    relatedLinks.add("$title: $url")
                 }
-        }
+            }
+
         return Module(
             iconUrl = document.select(".class-cover-image > img").attr("src"),
             shortName = document.select(".short-name").text().substringBetween("[", "]"),
@@ -65,7 +57,7 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
             secondaryName = document.select(".class-title > h4").text(),
             entity = entity,
             introduction = document.select("[class=text-area common-text font14]").labelReplacement(),
-            commonLinks
+            relatedLinks = relatedLinks
         )
     }
 }

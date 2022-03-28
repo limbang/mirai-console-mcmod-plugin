@@ -17,6 +17,7 @@ package top.limbang.mcmod.network.model
  * @param secondaryName 模组次要名称
  * @param entity 作者或开发团队
  * @param introduction 模组介绍
+ * @param relatedLinks 相关链接
  */
 data class Module(
     val iconUrl: String,
@@ -25,7 +26,7 @@ data class Module(
     val secondaryName: String,
     val entity: List<Entity>,
     val introduction: String,
-    val commonLinks: List<String> = emptyList()
+    val relatedLinks: List<String>
 ) {
     /**
      * ### 作者或开发团队
