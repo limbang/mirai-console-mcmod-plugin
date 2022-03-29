@@ -50,7 +50,7 @@ object McmodPlugin : KotlinPlugin(
         globalEventChannel().subscribeMessages {
             // 处理查询命令开头的所有消息
             queryCommand.forEach { (filter, cmd) ->
-                startsWith(cmd) {
+                startsWith(cmd+' ') {
                     // 根据配置过滤消息种类,默认只回复群消息
                     if (isMessageKindFilter(message.source.kind)) {
                         subject.sendMessage("未启用该方式查询,联系管理员更改配置")
