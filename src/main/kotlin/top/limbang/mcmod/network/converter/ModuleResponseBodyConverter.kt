@@ -26,10 +26,10 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
         val avatarUrls = document.select(".frame > ul > li > .avatar > a > img")
         val names = document.select(".frame > ul > li > .member > .name > a")
         val relations = document.select(".frame > ul > li > .member > .position")
-        val entity = mutableListOf<Module.Entity>()
+        val author = mutableListOf<Module.Author>()
         for (i in 0 until avatarUrls.size) {
-            entity.add(
-                Module.Entity(
+            author.add(
+                Module.Author(
                     avatarUrl = avatarUrls[i].attr("src"),
                     name = names[i].text(),
                     relation = relations[i].text(),
@@ -49,15 +49,22 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
                     relatedLinks.add("$title: $url")
                 }
             }
-
+        // 解析支持的MC版本
+        val versions = mutableListOf<Module.Version>()
+        document.select(".mcver > ul > ul")
+            .forEach { ul ->
+                val eachText = ul.select("li").eachText()
+                versions.add(Module.Version(eachText[0].replace(":", ""), eachText.subList(1, eachText.size)))
+            }
         return Module(
             iconUrl = document.select(".class-cover-image > img").attr("src"),
             shortName = document.select(".short-name").text().substringBetween("[", "]"),
             mainName = document.select(".class-title > h3").text(),
             secondaryName = document.select(".class-title > h4").text(),
-            entity = entity,
+            authors = author,
             introduction = document.select("[class=text-area common-text font14]").labelReplacement(),
-            relatedLinks = relatedLinks
+            relatedLinks = relatedLinks,
+            versions = versions
         )
     }
 }

@@ -56,8 +56,10 @@ isTempMessagesEnabled: false
 isStrangerMessagesEnabled: false
 # 是否启用显示原Url功能,默认不启用 true:启用 false:禁用
 isShowOriginalUrlEnabled: false
-# 是否启用显示相关链接功能,默认不启用 true:启用 false:禁用
+# 是否启用模组显示相关链接功能,默认不启用 true:启用 false:禁用
 isShowRelatedLinksEnabled: false
+# 是否启用模组显示支持版本功能,默认不启用 true:启用 false:禁用
+isShowSupportedVersionEnabled: false
 # 是否启用多次选择功能可以多次选择搜索的结果,默认不启用 true:启用 false:禁用
 isMultipleSelectEnabled: false
 # 每页显示多少条目,默认为 6

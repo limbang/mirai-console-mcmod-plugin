@@ -15,18 +15,20 @@ package top.limbang.mcmod.network.model
  * @param shortName 模组缩写
  * @param mainName 模组主要名称
  * @param secondaryName 模组次要名称
- * @param entity 作者或开发团队
+ * @param authors 作者或开发团队
  * @param introduction 模组介绍
  * @param relatedLinks 相关链接
+ * @param versions 支持的版本
  */
 data class Module(
     val iconUrl: String,
     val shortName: String,
     val mainName: String,
     val secondaryName: String,
-    val entity: List<Entity>,
+    val authors: List<Author>,
     val introduction: String,
-    val relatedLinks: List<String>
+    val relatedLinks: List<String>,
+    val versions: List<Version>
 ) {
     /**
      * ### 作者或开发团队
@@ -34,5 +36,13 @@ data class Module(
      * @param name 名称
      * @param relation 和模组的关系
      */
-    data class Entity(val avatarUrl: String, val name: String, val relation: String)
+    data class Author(val avatarUrl: String, val name: String, val relation: String)
+
+    /**
+     * 支持的版本
+     *
+     * @property name api 名称
+     * @property version 支持的版本列表
+     */
+    data class Version(val name: String, val version: List<String>)
 }

@@ -14,6 +14,7 @@ import net.mamoe.mirai.message.data.*
 import top.limbang.mcmod.mirai.McmodPluginConfig
 import top.limbang.mcmod.mirai.McmodPluginConfig.isShowOriginalUrlEnabled
 import top.limbang.mcmod.mirai.McmodPluginConfig.isShowRelatedLinksEnabled
+import top.limbang.mcmod.mirai.McmodPluginConfig.isShowSupportedVersionEnabled
 import top.limbang.mcmod.mirai.service.MiraiToMcmodService.readImage
 import top.limbang.mcmod.network.model.*
 import top.limbang.mcmod.network.utils.substringBetween
@@ -54,13 +55,23 @@ suspend fun Module.toMessage(event: MessageEvent, originalUrl: String) = with(ev
         bot says name
         bot says buildMessageChain {
             +"作者/开发团队:\n"
-            entity.forEach { entity ->
-                runCatching { readImage(entity.avatarUrl, true) }.onSuccess { +it }.onFailure { +it.localizedMessage }
-                +"${entity.name}:${entity.relation}\n"
+            authors.forEach { author ->
+                runCatching { readImage(author.avatarUrl, true) }.onSuccess { +it }.onFailure { +it.localizedMessage }
+                +"${author.name}:${author.relation}\n"
             }
         }
-        if (isShowOriginalUrlEnabled) bot says ("原文链接: $originalUrl")
-        if (isShowRelatedLinksEnabled) bot says ("相关链接:\n${relatedLinks.joinToString("\n")}")
+        if (isShowOriginalUrlEnabled) bot says "原文链接: $originalUrl"
+        if (isShowRelatedLinksEnabled) bot says "相关链接:\n${relatedLinks.joinToString("\n")}"
+        if (isShowSupportedVersionEnabled) {
+            var versionMessage = "支持的MC版本:"
+            versions.forEach {
+                versionMessage += "\n${it.name}:"
+                it.version.forEach { version ->
+                    versionMessage += " [$version]"
+                }
+            }
+            bot says versionMessage
+        }
         bot says introductionToMessage(introduction)
     }
 }
