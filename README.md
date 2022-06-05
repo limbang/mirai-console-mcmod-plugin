@@ -3,7 +3,7 @@
 [![](https://img.shields.io/github/v/release/limbang/mirai-console-mcmod-plugin?include_prereleases)](https://github.com/limbang/mirai-console-mcmod-plugin/releases)
 ![](https://img.shields.io/github/downloads/limbang/mirai-console-mcmod-plugin/total)
 [![](https://img.shields.io/github/license/limbang/mirai-console-mcmod-plugin)](https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE)
-[![](https://img.shields.io/badge/mirai-2.10.0-69c1b9)](https://github.com/mamoe/mirai)
+[![](https://img.shields.io/badge/mirai-2.11.1-69c1b9)](https://github.com/mamoe/mirai)
 
 本项目是基于 Mirai Console 编写的插件
 <p>所有数据均来源于<a href = "https://www.mcmod.cn/">MC百科</a></p>
@@ -13,11 +13,21 @@
 ## 指令
 
 ```shell
-# 修改搜索标签的命令
-/mcmod setQueryCommand <type> <command>
+/mcmod setConfig <kind> [enabled]    # 配置消息回复功能
+/mcmod setGroupConfig <enabled> [groupId]    # 配置具体群消息回复功能
+/mcmod setQueryCommand <type> <command>    # 配置查询指令
 ```
+设置指定群启动消息回复两种方法: 
+- 1.在需要的群发送 `/mcmod setGroupConfig true` 开启
+- 2.在控制台或对机器人发送 `/mcmod setGroupConfig true qq群号码` 开启
 
-`type`有如下类型:
+`kind`有如下类型: 如设置群消息回复 `/mcmod setConfig GROUP true`
+- `GROUP`:群消息
+- `FRIEND`:好友消息
+- `TEMP`:临时消息
+- `STRANGER`:陌生人消息
+
+`type`有如下类型: 如设置查询物品命令 `/mcmod setQueryCommand ITEM ssi`
 
 - [ ] `ALL`:全部
 - [x] `MODULE_PACKAGE`:整合包
@@ -41,19 +51,11 @@ SERVER = sss
 
 其他配置直接更改配置文件:
 
-路径:`config/top.limbang.mirai-console-mcmod-plugin/mcmod.yml`
+路径:`config/top.limbang.mcmod/mcmod.yml`
 
 ```yaml
 # 是否启用戳一戳回复功能 true:启用 false:禁用
 isNudgeEnabled: true
-# 是否启用群消息回复功能,默认回复群消息 true:启用 false:禁用
-isGroupMessagesEnabled: true
-# 是否启用好友消息回复功能,默认回复群消息 true:启用 false:禁用
-isFriendMessagesEnabled: false
-# 是否启用临时消息回复功能,默认回复群消息 true:启用 false:禁用
-isTempMessagesEnabled: false
-# 是否启用陌生人消息回复功能,默认回复群消息 true:启用 false:禁用
-isStrangerMessagesEnabled: false
 # 是否启用显示原Url功能,默认不启用 true:启用 false:禁用
 isShowOriginalUrlEnabled: false
 # 是否启用模组显示相关链接功能,默认不启用 true:启用 false:禁用

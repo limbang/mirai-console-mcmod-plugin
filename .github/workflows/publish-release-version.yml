@@ -37,6 +37,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/mirai/mirai-console-mcmod-plugin-${{ steps.vars.outputs.version }}.mirai.jar
+          file: build/mirai/mirai-console-mcmod-plugin-${{ steps.vars.outputs.version }}.mirai2.jar
           tag: ${{ github.ref }}
 

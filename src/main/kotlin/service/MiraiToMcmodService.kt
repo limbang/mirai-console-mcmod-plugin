@@ -23,9 +23,9 @@ import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okio.IOException
-import top.limbang.mcmod.McmodPlugin
-import top.limbang.mcmod.McmodPluginConfig
-import top.limbang.mcmod.McmodPluginConfig.isMultipleSelectEnabled
+import top.limbang.mcmod.Mcmod
+import top.limbang.mcmod.PluginConfig
+import top.limbang.mcmod.PluginConfig.isMultipleSelectEnabled
 import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchFilter.*
@@ -61,7 +61,7 @@ object MiraiToMcmodService {
             // 如果结果数等于30代表有下一页
             var isNextPage = it.size == 30
             // 创建分页存储
-            val pagingStorage = PagingStorage<SearchResult>(McmodPluginConfig.pageSize)
+            val pagingStorage = PagingStorage<SearchResult>(PluginConfig.pageSize)
             // 添加结果到存储里面
             pagingStorage.addAll(it)
 
@@ -83,10 +83,10 @@ object MiraiToMcmodService {
                             pagingStorage.getPageList(pagingStoragePage + 1).size
                             pagingStoragePage++
                         } catch (e: ArrayIndexOutOfBoundsException) {
-                            McmodPluginConfig.pageSize
+                            PluginConfig.pageSize
                         }
                         // 获取下一页的数据,大小如果小于页面设置的默认值且有下一页就获取下请求
-                        if (size < McmodPluginConfig.pageSize && isNextPage) {
+                        if (size < PluginConfig.pageSize && isNextPage) {
                             runCatching {
                                 if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, page))
                                 else mcmodService.search(key, filter.ordinal, page)
@@ -170,7 +170,7 @@ object MiraiToMcmodService {
                 else -> url
             }
 
-            val file = McmodPlugin.resolveDataFile("img/${imgUrl.toHttpUrl().encodedPath}")
+            val file = Mcmod.resolveDataFile("img/${imgUrl.toHttpUrl().encodedPath}")
             if (file.exists()) { // 判断本地是否已经存储
                 if (isZoomBySize) file.zoomBySize(45)
                 file.readBytes().toExternalResource()

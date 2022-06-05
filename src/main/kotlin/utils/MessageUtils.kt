@@ -11,10 +11,10 @@ package top.limbang.mcmod.utils
 
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.*
-import top.limbang.mcmod.McmodPluginConfig
-import top.limbang.mcmod.McmodPluginConfig.isShowOriginalUrlEnabled
-import top.limbang.mcmod.McmodPluginConfig.isShowRelatedLinksEnabled
-import top.limbang.mcmod.McmodPluginConfig.isShowSupportedVersionEnabled
+import top.limbang.mcmod.PluginConfig
+import top.limbang.mcmod.PluginConfig.isShowOriginalUrlEnabled
+import top.limbang.mcmod.PluginConfig.isShowRelatedLinksEnabled
+import top.limbang.mcmod.PluginConfig.isShowSupportedVersionEnabled
 import top.limbang.mcmod.network.model.*
 import top.limbang.mcmod.network.utils.substringBetween
 import top.limbang.mcmod.service.MiraiToMcmodService.readImage
@@ -35,9 +35,9 @@ fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean) = with(e
             bot.id named i.toString() says title
         }
         when {
-            this@toMessage.size < McmodPluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页"
-            this@toMessage.size == McmodPluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页 [N]下一页"
-            this@toMessage.size == McmodPluginConfig.pageSize && isFirst -> bot says "回复:[N]下一页"
+            this@toMessage.size < PluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页"
+            this@toMessage.size == PluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页 [N]下一页"
+            this@toMessage.size == PluginConfig.pageSize && isFirst -> bot says "回复:[N]下一页"
         }
     }
 }
