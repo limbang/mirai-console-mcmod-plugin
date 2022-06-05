@@ -39,6 +39,7 @@ import top.limbang.mcmod.service.MiraiToMcmodService.toMcmodSearch
 
 object Mcmod : KotlinPlugin(JvmPluginDescription(
     id = "top.limbang.mcmod",
+    name = "Mcmod",
     version = "2.0.7",
 ) {
     author("limbang")
