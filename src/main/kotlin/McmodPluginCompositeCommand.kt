@@ -7,7 +7,7 @@
  * https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE
  */
 
-package top.limbang.mcmod.mirai
+package top.limbang.mcmod
 
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.CompositeCommand

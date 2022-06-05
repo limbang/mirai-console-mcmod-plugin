@@ -7,7 +7,7 @@
  * https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE
  */
 
-package top.limbang.mcmod.mirai.utils
+package top.limbang.mcmod.utils
 
 /**
  * ### 分页存储

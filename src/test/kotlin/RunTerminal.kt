@@ -7,35 +7,27 @@
  * https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE
  */
 
+package top.limbang.mcmod
 
 import net.mamoe.mirai.alsoLogin
 import net.mamoe.mirai.console.MiraiConsole
 import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.enable
 import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.load
 import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
-import top.limbang.mcmod.mirai.McmodPlugin
-import java.io.FileInputStream
+import java.io.File
 import java.util.*
 
 suspend fun main() {
     MiraiConsoleTerminalLoader.startAsDaemon()
 
-    // 直接加载插件
-    McmodPlugin.load()
-    McmodPlugin.enable()
+    val pluginInstance = McmodPlugin
 
-    // 读取账号配置
-    val pros = Properties()
-    val file = FileInputStream("local.properties")
-    pros.load(file)
+    pluginInstance.load() // 主动加载插件, Console 会调用 MinecraftRemoteConsole.onLoad
+    pluginInstance.enable() // 主动启用插件, Console 会调用 MinecraftRemoteConsole.onEnable
 
-    val username = (pros["username"] as String).toLong()
-    val password = pros["password"] as String
+    val properties = Properties().apply { File("account.properties").inputStream().use { load(it) } }
 
-
-    val bot = MiraiConsole.addBot(username, password) {
-        fileBasedDeviceInfo()
-    }.alsoLogin()
+    val bot = MiraiConsole.addBot(properties.getProperty("id").toLong(), properties.getProperty("password")).alsoLogin() // 登录一个测试环境的 Bot
 
     MiraiConsole.job.join()
 }

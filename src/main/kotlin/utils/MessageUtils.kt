@@ -7,17 +7,17 @@
  * https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE
  */
 
-package top.limbang.mcmod.mirai.utils
+package top.limbang.mcmod.utils
 
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.*
-import top.limbang.mcmod.mirai.McmodPluginConfig
-import top.limbang.mcmod.mirai.McmodPluginConfig.isShowOriginalUrlEnabled
-import top.limbang.mcmod.mirai.McmodPluginConfig.isShowRelatedLinksEnabled
-import top.limbang.mcmod.mirai.McmodPluginConfig.isShowSupportedVersionEnabled
-import top.limbang.mcmod.mirai.service.MiraiToMcmodService.readImage
+import top.limbang.mcmod.McmodPluginConfig
+import top.limbang.mcmod.McmodPluginConfig.isShowOriginalUrlEnabled
+import top.limbang.mcmod.McmodPluginConfig.isShowRelatedLinksEnabled
+import top.limbang.mcmod.McmodPluginConfig.isShowSupportedVersionEnabled
 import top.limbang.mcmod.network.model.*
 import top.limbang.mcmod.network.utils.substringBetween
+import top.limbang.mcmod.service.MiraiToMcmodService.readImage
 
 
 /**

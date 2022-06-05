@@ -1,4 +1,4 @@
-package top.limbang.mcmod.mirai.utils
+package top.limbang.mcmod.utils
 
 import java.awt.Image
 import java.awt.image.BufferedImage

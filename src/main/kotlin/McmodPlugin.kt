@@ -7,7 +7,7 @@
  * https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE
  */
 
-package top.limbang.mcmod.mirai
+package top.limbang.mcmod
 
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
@@ -19,9 +19,9 @@ import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.MessageSourceKind
 import net.mamoe.mirai.message.data.kind
 import net.mamoe.mirai.message.data.source
-import top.limbang.mcmod.mirai.McmodPluginData.queryCommand
-import top.limbang.mcmod.mirai.service.MiraiToMcmodService.toMcmodSearch
+import top.limbang.mcmod.McmodPluginData.queryCommand
 import top.limbang.mcmod.network.model.SearchFilter
+import top.limbang.mcmod.service.MiraiToMcmodService.toMcmodSearch
 
 
 object McmodPlugin : KotlinPlugin(

@@ -7,7 +7,7 @@
  * https://github.com/limbang/mirai-console-mcmod-plugin/blob/master/LICENSE
  */
 
-package top.limbang.mcmod.mirai.service
+package top.limbang.mcmod.service
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,17 +23,17 @@ import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okio.IOException
-import top.limbang.mcmod.mirai.McmodPlugin
-import top.limbang.mcmod.mirai.McmodPluginConfig
-import top.limbang.mcmod.mirai.McmodPluginConfig.isMultipleSelectEnabled
-import top.limbang.mcmod.mirai.utils.PagingStorage
-import top.limbang.mcmod.mirai.utils.toMessage
-import top.limbang.mcmod.mirai.utils.zoomBySize
+import top.limbang.mcmod.McmodPlugin
+import top.limbang.mcmod.McmodPluginConfig
+import top.limbang.mcmod.McmodPluginConfig.isMultipleSelectEnabled
 import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchFilter.*
 import top.limbang.mcmod.network.model.SearchResult
 import top.limbang.mcmod.network.model.SearchServer
+import top.limbang.mcmod.utils.PagingStorage
+import top.limbang.mcmod.utils.toMessage
+import top.limbang.mcmod.utils.zoomBySize
 import java.util.*
 import javax.imageio.ImageIO
 
