@@ -15,6 +15,7 @@ import top.limbang.mcmod.network.model.Module
 import top.limbang.mcmod.network.utils.labelReplacement
 import top.limbang.mcmod.network.utils.parse
 import top.limbang.mcmod.network.utils.substringBetween
+import java.util.*
 
 /**
  * ### 把 html 响应解析成 [Module]
@@ -39,14 +40,16 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
         // 解析相关链接
         val relatedLinks = mutableListOf<String>()
         document.select(".common-link-frame > .list > ul > li")
-            .filter { it.childrenSize() > 1 }
             .forEach { li ->
                 // 从脚本中截取 url
-                val url = li.child(1).html().substringBetween("<strong>", "</strong>")
+                val url = li.select("a").attr("href")
                 if (url.isNotEmpty()) {
+                    // 提取 base64 加密字符串并解码出原 url
+                    val base64Url = url.substring(url.indexOf("/target/") + "/target/".length)
+                    val decodeUrl = Base64.getDecoder().decode(base64Url).decodeToString()
                     // 从 a 标签中读取标题
-                    val title = li.child(0).attr("data-original-title")
-                    relatedLinks.add("$title: $url")
+                    val title = li.select("a").attr("data-original-title")
+                    relatedLinks.add("$title: $decodeUrl")
                 }
             }
         // 解析支持的MC版本
