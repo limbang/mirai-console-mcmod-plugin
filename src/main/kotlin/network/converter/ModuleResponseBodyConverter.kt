@@ -46,6 +46,7 @@ class ModuleResponseBodyConverter : Converter<ResponseBody, Module> {
                 if (url.isNotEmpty()) {
                     // 提取 base64 加密字符串并解码出原 url
                     val base64Url = url.substring(url.indexOf("/target/") + "/target/".length)
+                        .replace("@","/") // 替换@为/
                     val decodeUrl = Base64.getDecoder().decode(base64Url).decodeToString()
                     // 从 a 标签中读取标题
                     val title = li.select("a").attr("data-original-title")
