@@ -32,7 +32,7 @@ fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean) = with(e
             val title =
                 this@toMessage[i].title.replace("\\([^()]*\\)".toRegex(), "").replace("\\[[^\\[\\]]*]".toRegex(), "")
                     .replace("\\s*-\\s*".toRegex(), "-")
-            bot.id named i.toString() says title
+            bot says "$i:$title"
         }
         when {
             this@toMessage.size < PluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页"
