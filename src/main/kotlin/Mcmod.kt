@@ -25,7 +25,6 @@ import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.data.MessageSource
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.MessageSourceKind
-import net.mamoe.mirai.message.data.kind
 import top.limbang.mcmod.PluginConfig.groupMessagesEnabled
 import top.limbang.mcmod.PluginConfig.isFriendMessagesEnabled
 import top.limbang.mcmod.PluginConfig.isGroupMessagesEnabled
@@ -40,7 +39,7 @@ import top.limbang.mcmod.service.MiraiToMcmodService.toMcmodSearch
 object Mcmod : KotlinPlugin(JvmPluginDescription(
     id = "top.limbang.mcmod",
     name = "Mcmod",
-    version = "2.0.8",
+    version = "2.0.10",
 ) {
     author("limbang")
     info("""mc百科查询""")

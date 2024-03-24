@@ -1,13 +1,13 @@
 plugins {
-    val kotlinVersion = "1.8.10"
+    val kotlinVersion = "1.9.0"
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
-    id("net.mamoe.mirai-console") version "2.15.0-M1"
+    id("net.mamoe.mirai-console") version "2.16.0"
 }
 
 group = "top.limbang.mcmod"
-version = "2.0.9"
+version = "2.0.10"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -16,7 +16,7 @@ repositories {
 
 dependencies{
     implementation("org.jsoup:jsoup:1.15.4")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.10.0")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
 
     testImplementation(kotlin("test"))
