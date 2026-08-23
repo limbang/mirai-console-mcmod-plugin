@@ -30,6 +30,18 @@ interface McmodService {
     ): List<SearchResult>
 
     /**
+     * ### 提交搜索安全验证码
+     * 成功响应会写入通行 Cookie, 调用方随后重新发起原搜索请求.
+     */
+    @FormUrlEncoded
+    @POST
+    suspend fun solveCaptcha(
+        @Url url: String,
+        @Field("cc_captcha_answer") answer: Int,
+        @Field("cc_captcha_submit") submit: Int = 1
+    ): ResponseBody
+
+    /**
      * ### 获取物品
      */
     @GET

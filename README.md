@@ -49,6 +49,8 @@ MODULE_PACKAGE = ssp
 SERVER = sss
 ```
 
+MC百科要求安全验证时，机器人会发送一张物品计数图片。发起查询的用户需要在 60 秒内回复数字答案；插件重启或通行凭证到期后会再次提示验证。
+
 其他配置直接更改配置文件:
 
 路径:`config/top.limbang.mcmod/mcmod.yml`
