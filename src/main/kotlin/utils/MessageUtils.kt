@@ -11,7 +11,6 @@ package top.limbang.mcmod.utils
 
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.*
-import top.limbang.mcmod.PluginConfig
 import top.limbang.mcmod.PluginConfig.isShowOriginalUrlEnabled
 import top.limbang.mcmod.PluginConfig.isShowRelatedLinksEnabled
 import top.limbang.mcmod.PluginConfig.isShowSupportedVersionEnabled
@@ -24,8 +23,9 @@ import top.limbang.mcmod.service.MiraiToMcmodService.readImage
  * ### 把搜索的结果转换成 [ForwardMessage] 消息
  * @param event 消息事件
  * @param isFirst 是否是第一页
+ * @param hasNextPage 是否还有下一页
  */
-fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean) = with(event) {
+fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean, hasNextPage: Boolean) = with(event) {
     buildForwardMessage {
         bot says "30秒内回复编号查看"
         for (i in this@toMessage.indices) {
@@ -35,9 +35,9 @@ fun List<SearchResult>.toMessage(event: MessageEvent, isFirst: Boolean) = with(e
             bot says "$i:$title"
         }
         when {
-            this@toMessage.size < PluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页"
-            this@toMessage.size == PluginConfig.pageSize && !isFirst -> bot says "回复:[P]上一页 [N]下一页"
-            this@toMessage.size == PluginConfig.pageSize && isFirst -> bot says "回复:[N]下一页"
+            !isFirst && hasNextPage -> bot says "回复:[P]上一页 [N]下一页"
+            !isFirst -> bot says "回复:[P]上一页"
+            hasNextPage -> bot says "回复:[N]下一页"
         }
     }
 }

@@ -40,6 +40,7 @@ import javax.imageio.ImageIO
 object MiraiToMcmodService {
     /** mcmod API 服务 */
     private val mcmodService = Service.getMcmodService
+    private const val PAGE_PREFETCH_LIMIT = 3
 
     /**
      * ### 搜索 mcmod
@@ -48,87 +49,161 @@ object MiraiToMcmodService {
      */
     suspend fun MessageEvent.toMcmodSearch(key: String, filter: SearchFilter): Message? {
         var pagingStoragePage = 1
+        var serverPage = 1
+        var isNextPage = true
+        val initialResults = mutableListOf<SearchResult>()
+        var prefetchedPages = 0
+
+        // 初始拉取: 客户端过滤模式下首页可能全部不属于目标分类, 多拉几页避免误判为无结果
         runCatching {
-            if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, pagingStoragePage))
-            else mcmodService.search(key, filter.ordinal, pagingStoragePage)
-        }.onSuccess {
-            // 未搜索到内容回复
-            if (it.isEmpty()) return PlainText("未查找到相关内容")
-            // 判断搜索到的结果是否只有一条,是就直接返回具体内容
-            if (it.size == 1) return parseSearchResult(filter, it[0], this)
-
-            var page = 2
-            // 如果结果数等于30代表有下一页
-            var isNextPage = it.size == 30
-            // 创建分页存储
-            val pagingStorage = PagingStorage<SearchResult>(PluginConfig.pageSize)
-            // 添加结果到存储里面
-            pagingStorage.addAll(it)
-
             do {
-                val list = pagingStorage.getPageList(pagingStoragePage)
-                val forwardMessage = list.toMessage(this, pagingStoragePage == 1)
-                val listMessage = subject.sendMessage(forwardMessage)
-                // 获取下一条消息事件
-                val nextEvent: MessageEvent? = withTimeoutOrNull(30000) {
-                    GlobalEventChannel.nextEvent(EventPriority.MONITOR) { next -> next.sender == sender }
-                }
-                if (nextEvent == null) {
-                    listMessage.recall()
-                    return null
-                }
-                // 翻页控制
-                val nextMessage = nextEvent.message.content
-                val isContinue = when {
-                    // 判断是否向下翻页
-                    nextMessage.equals("n", true) -> {
-                        val size = try {
-                            pagingStorage.getPageList(pagingStoragePage + 1).size
-                            pagingStoragePage++
-                        } catch (e: ArrayIndexOutOfBoundsException) {
-                            PluginConfig.pageSize
-                        }
-                        // 获取下一页的数据,大小如果小于页面设置的默认值且有下一页就获取下请求
-                        if (size < PluginConfig.pageSize && isNextPage) {
-                            runCatching {
-                                if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, page))
-                                else mcmodService.search(key, filter.ordinal, page)
-                            }.onSuccess { nextList ->
-                                isNextPage = nextList.size == 30
-                                pagingStorage.addAll(nextList)
-                                page++
-                            }.onFailure { e ->
-                                return PlainText("请求失败：${e.message}")
-                            }
-                        }
-                        true
-                    }
-                    // 判断是否向上翻页
-                    nextMessage.equals("p", true) -> {
-                        // 页码大于 1 才能上翻
-                        if (pagingStoragePage > 1) pagingStoragePage--
-                        true
-                    }
-                    // 判断是否选择了序号
-                    nextMessage.toIntOrNull() != null -> {
-                        if (nextMessage.toInt() > list.size) return PlainText("输入的序号过大").also { listMessage.recall() }
-                        if (nextMessage.toInt() < 0) return PlainText("输入的序号过小").also { listMessage.recall() }
-                        val message = parseSearchResult(filter, list[nextMessage.toInt()], this)
-                        if (!isMultipleSelectEnabled) return message.also { listMessage.recall() }
-                        subject.sendMessage(message)
-                        true
-                    }
-                    else -> false
-                }
-                // 撤回发出的列表消息
-                listMessage.recall()
-            } while (isContinue)
+                val (filtered, hasMore) = fetchSearchPage(filter, key, serverPage)
+                initialResults.addAll(filtered)
+                isNextPage = hasMore
+                serverPage++
+                prefetchedPages++
+            } while (initialResults.isEmpty() && isNextPage && prefetchedPages < PAGE_PREFETCH_LIMIT)
         }.onFailure {
             return PlainText("请求失败：${it.message}")
         }
+
+        if (initialResults.isEmpty()) return PlainText("未查找到相关内容")
+        if (initialResults.size == 1) return parseSearchResult(filter, initialResults[0], this)
+
+        val pagingStorage = PagingStorage<SearchResult>(PluginConfig.pageSize)
+        pagingStorage.addAll(initialResults)
+
+        do {
+            val list = pagingStorage.getPageList(pagingStoragePage)
+            val hasNextPage = pagingStorage.pageSizeOrZero(pagingStoragePage + 1) > 0 || isNextPage
+            val forwardMessage = list.toMessage(this, pagingStoragePage == 1, hasNextPage)
+            val listMessage = subject.sendMessage(forwardMessage)
+            // 获取下一条消息事件
+            val nextEvent: MessageEvent? = withTimeoutOrNull(30000) {
+                GlobalEventChannel.nextEvent(EventPriority.MONITOR) { next -> next.sender == sender }
+            }
+            if (nextEvent == null) {
+                listMessage.recall()
+                return null
+            }
+            // 翻页控制
+            val nextMessage = nextEvent.message.content
+            val selectedIndex = nextMessage.toIntOrNull()
+            val isContinue = when {
+                // 判断是否向下翻页
+                nextMessage.equals("n", true) -> {
+                    val currentPageSize = list.size
+                    var nextPageSize = pagingStorage.pageSizeOrZero(pagingStoragePage + 1)
+                    var fetchedPages = 0
+
+                    // 客户端过滤可能让本地下一页不足, 有界补拉服务端页直到可翻页或没有更多数据
+                    while (
+                        nextPageSize < PluginConfig.pageSize &&
+                        isNextPage &&
+                        fetchedPages < PAGE_PREFETCH_LIMIT
+                    ) {
+                        val (filtered, hasMore) = runCatching {
+                            fetchSearchPage(filter, key, serverPage)
+                        }.getOrElse { e ->
+                            return PlainText("请求失败：${e.message}").also { listMessage.recall() }
+                        }
+
+                        isNextPage = hasMore
+                        pagingStorage.addAll(filtered)
+                        serverPage++
+                        fetchedPages++
+                        nextPageSize = pagingStorage.pageSizeOrZero(pagingStoragePage + 1)
+                    }
+
+                    when {
+                        nextPageSize > 0 -> {
+                            pagingStoragePage++
+                            true
+                        }
+                        pagingStorage.pageSizeOrZero(pagingStoragePage) > currentPageSize -> {
+                            isNextPage = false
+                            true
+                        }
+                        else -> {
+                            isNextPage = false
+                            return PlainText("没有更多内容").also { listMessage.recall() }
+                        }
+                    }
+                }
+                // 判断是否向上翻页
+                nextMessage.equals("p", true) -> {
+                    // 页码大于 1 才能上翻
+                    if (pagingStoragePage > 1) pagingStoragePage--
+                    true
+                }
+                // 判断是否选择了序号
+                selectedIndex != null -> {
+                    if (selectedIndex !in list.indices) {
+                        val error = if (selectedIndex < 0) "输入的序号过小" else "输入的序号过大"
+                        return PlainText(error).also { listMessage.recall() }
+                    }
+                    val message = parseSearchResult(filter, list[selectedIndex], this)
+                    if (!isMultipleSelectEnabled) return message.also { listMessage.recall() }
+                    subject.sendMessage(message)
+                    true
+                }
+                else -> false
+            }
+            // 撤回发出的列表消息
+            listMessage.recall()
+        } while (isContinue)
         return null
     }
 
+    /**
+     * ### 执行一次搜索请求
+     *
+     * 对 [SERVER] 走专用接口; [MODULE]、[MODULE_PACKAGE]、[ITEM] 和 [COURSE]
+     * 使用 ALL 接口后按 URL 客户端筛选, 借此复用 mcmod 在 ALL 模式下更智能的排序;
+     * 其他分类仍使用原有服务端过滤参数
+     * (官方过滤接口对热门关键字的排序较差, 例如 "AE2" 会被附属模组淹没).
+     *
+     * @return 过滤后的结果列表 to 服务端是否还有下一页
+     */
+    private suspend fun fetchSearchPage(
+        filter: SearchFilter,
+        key: String,
+        page: Int
+    ): Pair<List<SearchResult>, Boolean> = when (filter) {
+        SERVER -> {
+            val list = mcmodService.searchServer(body = SearchServer(key, page))
+            list to (list.size == 30)
+        }
+        ALL -> {
+            val list = mcmodService.search(key, ALL.ordinal, page)
+            list to (list.size == 30)
+        }
+        MODULE, MODULE_PACKAGE, ITEM, COURSE -> {
+            val raw = mcmodService.search(key, ALL.ordinal, page)
+            raw.filter { urlMatchesFilter(it.url, filter) } to (raw.size == 30)
+        }
+        else -> {
+            val list = mcmodService.search(key, filter.ordinal, page)
+            list to (list.size == 30)
+        }
+    }
+
+    /**
+     * ### 按 URL 判断搜索结果是否属于指定分类
+     *
+     * mcmod ALL 接口返回的链接通过路径反映分类:
+     * `/class/` 模组, `/modpack/` 整合包, `/item/` 物品资料, `/post/` 教程.
+     */
+    private fun urlMatchesFilter(url: String, filter: SearchFilter): Boolean = when (filter) {
+        MODULE -> url.contains("/class/")
+        MODULE_PACKAGE -> url.contains("/modpack/")
+        ITEM -> url.contains("/item/")
+        COURSE -> url.contains("/post/")
+        else -> false
+    }
+
+    private fun PagingStorage<SearchResult>.pageSizeOrZero(page: Int): Int =
+        runCatching { getPageList(page).size }.getOrDefault(0)
 
     /**
      * ### 解析搜索的结果
