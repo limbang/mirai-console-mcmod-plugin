@@ -10,6 +10,8 @@
 package top.limbang.mcmod.service
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import net.mamoe.mirai.event.EventPriority
@@ -26,6 +28,8 @@ import okio.IOException
 import top.limbang.mcmod.Mcmod
 import top.limbang.mcmod.PluginConfig
 import top.limbang.mcmod.PluginConfig.isMultipleSelectEnabled
+import top.limbang.mcmod.network.McmodBlockedException
+import top.limbang.mcmod.network.McmodCaptchaException
 import top.limbang.mcmod.network.Service
 import top.limbang.mcmod.network.model.SearchFilter
 import top.limbang.mcmod.network.model.SearchFilter.*
@@ -40,6 +44,10 @@ import javax.imageio.ImageIO
 object MiraiToMcmodService {
     /** mcmod API 服务 */
     private val mcmodService = Service.getMcmodService
+    private val searchMutex = Mutex()
+
+    private const val CAPTCHA_TIMEOUT_MILLIS = 60_000L
+    private const val CAPTCHA_MAX_ATTEMPTS = 3
 
     /**
      * ### 搜索 mcmod
@@ -50,7 +58,7 @@ object MiraiToMcmodService {
         var pagingStoragePage = 1
         runCatching {
             if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, pagingStoragePage))
-            else mcmodService.search(key, filter.ordinal, pagingStoragePage)
+            else searchWithCaptcha(key, filter.ordinal, pagingStoragePage)
         }.onSuccess {
             // 未搜索到内容回复
             if (it.isEmpty()) return PlainText("未查找到相关内容")
@@ -92,13 +100,13 @@ object MiraiToMcmodService {
                         if (size < PluginConfig.pageSize && isNextPage) {
                             runCatching {
                                 if (filter == SERVER) mcmodService.searchServer(body = SearchServer(key, page))
-                                else mcmodService.search(key, filter.ordinal, page)
+                                else searchWithCaptcha(key, filter.ordinal, page)
                             }.onSuccess { nextList ->
                                 isNextPage = nextList.size == 30
                                 pagingStorage.addAll(nextList)
                                 page++
                             }.onFailure { e ->
-                                return PlainText("请求失败：${e.message}")
+                                return PlainText(formatRequestError(e))
                             }
                         }
                         true
@@ -124,11 +132,87 @@ object MiraiToMcmodService {
                 listMessage.recall()
             } while (isContinue)
         }.onFailure {
-            return PlainText("请求失败：${it.message}")
+            return PlainText(formatRequestError(it))
         }
         return null
     }
 
+    /**
+     * 搜索站的验证码会话由 Cookie 标识, 因此主站搜索必须串行执行.
+     */
+    private suspend fun MessageEvent.searchWithCaptcha(
+        key: String,
+        filter: Int,
+        page: Int
+    ): List<SearchResult> =
+        searchMutex.withLock {
+            try {
+                mcmodService.search(key, filter, page)
+            } catch (challenge: McmodCaptchaException) {
+                solveSearchCaptcha(challenge, key, filter, page)
+            }
+        }
+
+    private suspend fun MessageEvent.solveSearchCaptcha(
+        initialChallenge: McmodCaptchaException,
+        key: String,
+        filter: Int,
+        page: Int
+    ): List<SearchResult> {
+        var challenge = initialChallenge
+        repeat(CAPTCHA_MAX_ATTEMPTS) { attempt ->
+            val answer = awaitCaptchaAnswer(challenge, attempt + 1)
+                ?: throw IOException("mcmod 安全验证超时")
+            try {
+                mcmodService.solveCaptcha(challenge.requestUrl, answer).close()
+                return mcmodService.search(key, filter, page)
+            } catch (nextChallenge: McmodCaptchaException) {
+                challenge = nextChallenge
+            }
+        }
+        throw McmodBlockedException("mcmod captcha verification failed")
+    }
+
+    private suspend fun MessageEvent.awaitCaptchaAnswer(
+        challenge: McmodCaptchaException,
+        attempt: Int
+    ): Int? {
+        val resource = challenge.imageBytes.toExternalResource()
+        val image = try {
+            subject.uploadImage(resource)
+        } finally {
+            withContext(Dispatchers.IO) { resource.close() }
+        }
+        subject.sendMessage(
+            image + PlainText(
+                "\nMCMOD 安全验证 ($attempt/$CAPTCHA_MAX_ATTEMPTS)\n" +
+                    "${challenge.question}\n请在 60 秒内回复数字答案"
+            )
+        )
+
+        val answerEvent = withTimeoutOrNull(CAPTCHA_TIMEOUT_MILLIS) {
+            GlobalEventChannel.nextEvent<MessageEvent>(EventPriority.MONITOR) { next ->
+                next.bot.id == bot.id &&
+                    next.subject.id == subject.id &&
+                    next.sender.id == sender.id &&
+                    next.message.content.trim().toIntOrNull() != null
+            }
+        }
+        return answerEvent?.message?.content?.trim()?.toIntOrNull()
+    }
+
+    /**
+     * ### 把请求异常格式化为用户提示
+     * 对 [McmodBlockedException] 给出明确说明, 避免被误读成 "搜索无结果".
+     */
+    private fun formatRequestError(e: Throwable): String = when (e) {
+        is McmodBlockedException -> if (e.message?.contains("frequently") == true) {
+            "请求过于频繁，请稍后再试"
+        } else {
+            "被 mcmod 反爬虫拦截"
+        }
+        else -> "请求失败：${e.message}"
+    }
 
     /**
      * ### 解析搜索的结果
@@ -151,7 +235,7 @@ object MiraiToMcmodService {
                 else -> TODO()
             }
         }.onFailure {
-            return PlainText("请求失败：${it.message}")
+            return PlainText(formatRequestError(it))
         }
         return PlainText("未实现的分类查询!")
     }

@@ -10,8 +10,10 @@
 package top.limbang.mcmod.network
 
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import retrofit2.Retrofit
 import top.limbang.mcmod.network.converter.McmodConverterFactory
+import top.limbang.mcmod.network.interceptor.ChallengeInterceptor
 import top.limbang.mcmod.network.interceptor.UserAgentInterceptor
 import top.limbang.mcmod.network.service.McmodService
 import top.limbang.mcmod.network.service.UrlService
@@ -23,10 +25,13 @@ object Service {
      */
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
+            .protocols(listOf(Protocol.HTTP_1_1))
+            .cookieJar(InMemoryCookieJar())
             .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
             .addInterceptor(UserAgentInterceptor())
+            .addInterceptor(ChallengeInterceptor())
             .build()
     }
 
